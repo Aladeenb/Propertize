@@ -213,7 +213,8 @@ module propertize_addr::property {
     }
 
     /// Burn the token, and destroy the FractionalShareToken
-    /// and OwnershipShare resources, and the property map. 
+    /// and OwnershipShare resources, and the property map.
+    // TODO: something wrong with `burn` function: https://github.com/Aladeenb/Propertize/issues/3 
     public entry fun burn(creator: &signer, token: Object<FractionalShareToken>) acquires FractionalShareToken {
         assert_creator(creator, &token);
         let fractional_share_token = move_from<FractionalShareToken>(object::object_address(&token));
@@ -303,7 +304,7 @@ module propertize_addr::property {
         // Asserts the burnt token exists before burning
         assert_token_exists(&token);
     }
-
+    // Test not passing: https://github.com/Aladeenb/Propertize/issues/3
     #[test(creator = @0x123)]
     fun test_mint_and_burn(creator: &signer) acquires FractionalShareToken {
         // Creator creates the Property Collection
