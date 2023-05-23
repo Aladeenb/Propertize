@@ -1,12 +1,8 @@
 module propertize_addr::registry{
     use std::signer;
-    use aptos_framework::event;
-    use std::string::String;
     use aptos_std::table::{Self, Table};
-    use std::error;
-    use aptos_framework::account;
-    use aptos_framework::object::{Self, ConstructorRef, Object};
-    use propertize_addr::property::{Property};
+    use aptos_framework::object::{Self, Object};
+    use propertize_addr::property::{FractionalShareToken};
 
     friend propertize_addr::marketplace; 
 
@@ -112,14 +108,15 @@ module propertize_addr::registry{
     * NOTES: maybe it is useless to do so anyways cuz there will always be the explorer.
     */
     public(friend) entry fun transfer_property_ownership(
-    /// TODO: transfer vs linear transfer?
+    // TODO: transfer vs linear transfer?
+    // TODO: only Oobjects from Registry can be transfered
         from: &signer,
-        object: Object<Property>,
+        object: Object<FractionalShareToken>,
         to: address,
     ) {
-    /// TODO: assert the signer is the property owner
-    /// TODO: assert the reciever is not the property owner
+    // TODO: assert the signer is the property owner
+    // TODO: assert the reciever is not the property owner
         object::transfer(from, object, to);
-        /// TODO: update the property owner?
+        // TODO: update the property owner?
     }
 }

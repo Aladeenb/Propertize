@@ -13,7 +13,9 @@ import {
   Input,
   InputRightElement,
   Text,
-  HStack
+  HStack,
+  VStack,
+  Heading
 } from '@chakra-ui/react';
 import { MODULE_ADDRESS, PROVIDER } from './constants';
 import { Spin } from 'antd';
@@ -181,56 +183,62 @@ export const RegistryComponent = () => {
           Create Registry
         </Button>
         </ButtonGroup>
-      ) : (
-        // TODO: why registeredProperties[] remains null?
-            registeredProperties && (
-              <Stack>
-                <List> 
-                    {
-                      registeredProperties.map((registeredProperty) => (
-                        <ListItem 
-                        key={registeredProperty.owner_address}
-                        title={registeredProperty.property_address}
+        ) : (
+          registeredProperties && (
+            <VStack 
+              spacing={"10"}
+              align={"Center"}
+            >
+              <List>
+                <Heading size='xs'>
+                  Registry list 
+                </Heading>
+                {
+                  registeredProperties.map((registeredProperty) => (
+                    <ListItem 
+                    key={registeredProperty.owner_address}
+                    title={registeredProperty.property_address}
+                    >
+                      <HStack>
+                        <Text>
+                          {registeredProperty.property_address}
+                        </Text>
+                        <Link 
+                        href={`https://explorer.aptoslabs.com/account/${registeredProperty.property_address}/`}
+                        isExternal
                         >
-                          <HStack>
-                            <Text>
-                              {registeredProperty.property_address}
-                            </Text>
-                            <Link 
-                            href={`https://explorer.aptoslabs.com/account/${registeredProperty.property_address}/`}
-                            isExternal
-                            >
-                              view on Explorer
-                            </Link>
-                          </HStack>
-                        </ListItem>
-                      ))
-                    }
-                  </List>
-                  <Box>
-                    <Text>Property:</Text>
-                    <InputGroup size='md'>
-                      <Input
-                        pr='4.5rem'
-                        onChange={(event) => onRegisterProperty(event)}
-                        placeholder='Enter property address'
-                        value={newRegisterProperty}
-                        //type={}
-                      />
-                      <InputRightElement width='4.5rem'>
-                        <Button
-                          h='1.75rem' 
-                          size='sm'
-                          onClick={onPropertyRegistered}
-                        >
-                          Register
-                        </Button>
-                      </InputRightElement>
-                    </InputGroup>
-                  </Box>
-              </Stack>
-            )
+                          view on Explorer
+                        </Link>
+                      </HStack>
+                    </ListItem>
+                  ))
+                }
+              </List>
+              <Box>
+                {/*TODO: make this a popover*/}
+                <Text>Register Property:</Text>
+                <InputGroup size='md'>
+                  <Input
+                    pr='4.5rem'
+                    onChange={(event) => onRegisterProperty(event)}
+                    placeholder='Enter property address'
+                    value={newRegisterProperty}
+                    //type={}
+                  />
+                  <InputRightElement width='4.5rem'>
+                    <Button
+                      h='1.75rem' 
+                      size='sm'
+                      onClick={onPropertyRegistered}
+                    >
+                      Register
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
+              </Box>
+            </VStack>
           )
+        )
       }
       </Center>
     </Spin>

@@ -14,6 +14,7 @@ import {
   Flex,
   Spacer,
   ButtonGroup,
+  Container,
 } from "@chakra-ui/react"
 import { ColorModeSwitcher } from "./ColorModeSwitcher"
 import { ConnectComponent } from "./ConnectComponent"
@@ -22,6 +23,8 @@ import { PropertyComponent } from "./PropertyComponent"
 
 export const App = () => (
   <ChakraProvider theme={theme}>
+
+    {/*Tab bar*/}
     <Grid  p={3}>  
       <Flex minWidth='max-content' alignItems='center' gap='2'>
         <Box p='2'>
@@ -40,40 +43,31 @@ export const App = () => (
         </ButtonGroup>
       </Flex>
     </Grid>
-    
-    <Box textAlign="center">
-      <Grid minH="100vh" p={3}>
-        
-        
-        <VStack spacing={4}>
-          
-          <Flex justify="center" mt={32}>
-          
-          </Flex>
 
-          <Stack direction='row' h='100px' p={4}>
-            <Box p='5'>
-              <Text fontSize="large">
-                Registry
-              </Text> 
-            </Box>
-                <RegistryComponent />         
-          </Stack>
+    <Stack
+      spacing="4"
+      align={"center"}
+    >
+      <Box padding='10'></Box>
+      {/*Registry*/}
+      <Container>
+        <Box 
+            padding='4'
+            shadow='md' 
+            borderWidth='2px'
+            borderRadius={"10"}
+            >
+            <Heading fontSize='xl'>Registry</Heading>
+            <RegistryComponent/>
+        </Box>
+      </Container>
 
-          <Divider orientation='horizontal' />
-
-          <Stack direction='row' h='100px' p={4}>
-            <Box p='1'>
-              <Text fontSize="large">
-                Property
-              </Text> 
-            </Box>
-                <PropertyComponent />         
-          </Stack>
-            
-
-        </VStack>
-      </Grid>
-    </Box>
+      {/*Property*/}
+      <Container>
+        <Box>
+          <PropertyComponent/>
+        </Box>
+      </Container>
+    </Stack>
   </ChakraProvider>
 )

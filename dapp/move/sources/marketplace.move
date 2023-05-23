@@ -1,14 +1,10 @@
 // TODO: difference between use and friend?
 
 module propertize_addr::marketplace {
-    use std::signer;
-    use aptos_framework::event;
-    use std::string::String;
     use aptos_std::table::{Self, Table};
-    use std::error;
-    use aptos_framework::account;
-    use aptos_framework::object::{Self, ConstructorRef, Object};
-    use propertize_addr::property::{Property};
+
+    use aptos_framework::object::{Object};
+    use propertize_addr::property::{FractionalShareToken};
 
     //
     // Errors
@@ -30,7 +26,7 @@ module propertize_addr::marketplace {
     // TODO: list for prev. sales. usefull for history
     struct Sold has store, drop, copy {
         new_owner: address,
-        property: Object<Property>,
+        property: Object<FractionalShareToken>,
         timestamp: u64, // TODO: make use of time framework
     } 
 
@@ -47,23 +43,23 @@ module propertize_addr::marketplace {
         move_to(account, properties_owner);
     }
 
-    /// TODO: list a property for sale
+    // TODO: list a property for sale
     entry fun list_property(){}
 
 
 
 
-    /// swapping nft for money
-    /// TODO: buy a property. Verify func logic
+    // swapping nft for money
+    // TODO: buy a property. Verify func logic
     public entry fun buy_property(
         from: &signer,
-        object: Object<Property>,
+        object: Object<FractionalShareToken>,
         to: address,
     ){
         propertize_addr::registry::transfer_property_ownership(from, object, to)
     }
 
 
-    /// TODO: add Transfer function specific to lending.
+    // TODO: add Transfer function specific to lending.
 
 }
