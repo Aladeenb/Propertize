@@ -7,7 +7,8 @@
     - FractionalShare tokens have custom attribute called OwnershipShare.
     - OwnershipShare represents the percentage of Property ownership 
     belongs to the FractionalShare.
-    - TODO: collection owner should be able to mint/burn tokens. Not only creator. 
+    - TODO: the owner of the collection is the one who should be able 
+    to mint/burn tokens. Not the creator. 
 
     - TODO: other FractionalShare attributes to consider:
         - Size: size in the property that belongs to FractionalShare.
@@ -78,7 +79,7 @@ module propertize_addr::property {
         );
     }
 
-    // TODO: Asserts the burnt token does not exist after burning
+    // Asserts the burnt token does not exist after burning
     inline fun assert_token_does_not_exist<T: key>(token: &Object<T>){
         let token_address = object::object_address(token);
         assert!(
