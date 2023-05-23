@@ -88,7 +88,7 @@ module propertize_addr::property {
         );
     }
 
-    /// Asserts the creator of the token is `creator`
+    /// Asserts the owner is the `creator`
     inline fun assert_creator<T: key>(creator: &signer, token: &Object<T>) {
         assert!(
             token::creator(*token) == signer::address_of(creator),
@@ -96,7 +96,7 @@ module propertize_addr::property {
         );
     }
 
-    /// Asserts the creator of the token is `owner`
+    /// Asserts the owner is the `owner`
     inline fun assert_owner<T: key>(owner: &signer, token: &Object<T>) {
         assert!(
             object::owner(*token) == signer::address_of(owner),
