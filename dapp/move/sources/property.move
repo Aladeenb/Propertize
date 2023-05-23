@@ -7,6 +7,7 @@
     - FractionalShare tokens have custom attribute called OwnershipShare.
     - OwnershipShare represents the percentage of Property ownership 
     belongs to the FractionalShare.
+    - TODO: collection owner should be able to mint/burn tokens. Not only creator. 
 
     - TODO: other FractionalShare attributes to consider:
         - Size: size in the property that belongs to FractionalShare.
@@ -33,14 +34,16 @@ module propertize_addr::property {
     //
     /// The token does not exist
     const ETOKEN_DOES_NOT_EXIST: u64=1;
+    /// The token  exists
+    const ETOKEN_EXISTS: u64=2;
     /// The signer is not the token creator 
-    const ENOT_CREATOR: u64=2;
+    const ENOT_CREATOR: u64=3;
     /// The signer is not the token owner
-    const ENOT_OWNER: u64=3;
+    const ENOT_OWNER: u64=4;
     /// The remaining supply is null
-    const EREMAINING_SUPPLY_IS_NULL: u64=4;
+    const EREMAINING_SUPPLY_IS_NULL: u64=5;
     /// The remaining supply is sufficient
-    const EREMAINING_SUPPLY_IS_NOT_SUFFICIENT: u64=5;
+    const EREMAINING_SUPPLY_IS_NOT_SUFFICIENT: u64=6;
 
     /// The Property token collection name
     const COLLECTION_NAME: vector<u8> = b"Property Collection Name";
@@ -75,6 +78,15 @@ module propertize_addr::property {
         );
     }
 
+    // TODO: Asserts the burnt token does not exist after burning
+    inline fun assert_token_does_not_exist<T: key>(token: &Object<T>){
+        let token_address = object::object_address(token);
+        assert!(
+            !exists<T>(token_address),
+            error::already_exists(ETOKEN_EXISTS),
+        );
+    }
+
     /// Asserts the creator of the token is `creator`
     inline fun assert_creator<T: key>(creator: &signer, token: &Object<T>) {
         assert!(
@@ -86,7 +98,7 @@ module propertize_addr::property {
     /// Asserts the creator of the token is `owner`
     inline fun assert_owner<T: key>(owner: &signer, token: &Object<T>) {
         assert!(
-            token::creator(*token) == signer::address_of(owner),
+            object::owner(*token) == signer::address_of(owner),
             error::permission_denied(ENOT_OWNER),
         );
     }
@@ -162,31 +174,19 @@ module propertize_addr::property {
     //
     // Entry functions
     //
-    /// Mint fractional share token (only the collection creator can call this function)
-    public entry fun mint_fractional_share_token_by_user(
-        user: &signer,
-        creator: &signer,
-        description: String,
-        name: String,
-        uri: String,
-    ) {
-        mint_fractional_share_token(creator, description, name, uri, signer::address_of(user));
-    }
-
-    /// Mint function
+    /// Mints fractional share token (only the collection owner can call this function)
     public entry fun mint_fractional_share_token(
-        creator: &signer,
+        owner: &signer,
         description: String,
         name: String,
         uri: String,
-        transfer_to: address,
     ) {
         // The collection name is used to locate the collection object and to create a new token object.
         let collection = string::utf8(COLLECTION_NAME);
         // Creates the fractional share token, and get the constructor ref of the token. The constructor ref
         // is used to generate the refs of the token.
         let constructor_ref = token::create_named_token(
-            creator,
+            owner,
             collection,
             description,
             name,
@@ -224,54 +224,118 @@ module propertize_addr::property {
 
         property_map::burn(property_mutator_ref);
         token::burn(burn_ref);
+        // TODO: should the supply be decremented after burning a token?
     } 
 
     /// Transfer the fractional share token to `transfer_to` address.
-    public entry fun transfer_fractional_share(owner: &signer, transfer_to: address, token: Object<FractionalShareToken>) acquires FractionalShareToken {
-       //let constructor_ref = token::create_named_token(
-       //    owner,
-       //    transfer_to,
-       //    token,
-       //);
+    public entry fun transfer_fractional_share(owner: &signer, to: &signer, token: Object<FractionalShareToken>) {
+        // Assert token exists
+        assert_token_exists(&token);
+        // Assert the owner is the the owner of the token to be transferred 
+        assert_owner(owner, &token);
+        object::transfer(owner, token, signer::address_of(to));
 
-       //assert_owner(owner, &token);
-       //let transfer_ref = object::generate_transfer_ref(&constructor_ref);
-
-       //// Transfers the token using linear transfer, since disabling/enabling ungated transfer might be needed at some point.
-       //let linear_transfer_ref = object::generate_linear_transfer_ref(&transfer_ref);
-       //object::transfer_with_ref(linear_transfer_ref, transfer_to);
     }
 
     /// TODO: transfer the collection to another address.
+    //public entry fun transfer_property_collection(owner: &signer, to: &signer) {
+    //}
 
     /// Set the ownership share percentage.
     /// This is directly correlated with total supply decalred above.
-  //public entry fun set_ownership_share_percentage(
-  //    creator: &signer,
-  //    token: Object<FractionalShareToken>,
-  //    new_ownership_share_pecentage: u64
-  //) acquires OwnershipShare, FractionalShareToken {
-  //  // TODO: how to get the remaining token supply?
-  //  let supply = remaining_supply;
-  //  // Asserts that `creator` is the collection owner.
-  //  assert_creator(creator, &token);
-  //  // Asserts that remaining supply is not null
-  //  assert_remaining_supply_is_not_null(remaining_supply);
-  //  // TODO: Asserts that the new ownership share pecentage is less or equal than the available supply
-  //  //assert_remaining_supply_is_sufficient();
-  //  let token_address = object::object_address(&token);
-  //  let ownership_share_pecentage = borrow_global_mut<OwnershipShare>(token_address);
-
-  //  // Updates the remaining total supply
-  //  // TODO: probs there is a better way to update the remaining supply
-  //  supply = supply + ownership_share_pecentage - new_ownership_share_pecentage;
-  //  // Updates the ownership share percentage
-  //  ownership_share_pecentage = new_ownership_share_pecentage;
-  //}
+    //public entry fun set_ownership_share_percentage(
+    //    creator: &signer,
+    //    token: Object<FractionalShareToken>,
+    //    new_ownership_share_pecentage: u64
+    //) acquires OwnershipShare, FractionalShareToken {
+    //  // TODO: how to get the remaining token supply?
+    //  let remaining_supply = supply;
+    //  // Asserts that `creator` is the collection owner.
+    //  assert_creator(creator, &token);
+    //  // Asserts that remaining supply is not null
+    //  assert_remaining_supply_is_not_null(remaining_supply);
+    //  // TODO: Asserts that the new ownership share pecentage is less or equal than the available supply
+    //  //assert_remaining_supply_is_sufficient();
+    //  let token_address = object::object_address(&token);
+    //  let ownership_share_pecentage = borrow_global_mut<OwnershipShare>(token_address);
+//
+    //  // Updates the remaining total supply
+    //  // TODO: probs there is a better way to update the remaining supply
+    //  supply = supply + (ownership_share_pecentage - new_ownership_share_pecentage);
+    //  // Updates the ownership share percentage
+    //  ownership_share_pecentage = new_ownership_share_pecentage;
+    //}
         
 
     //
     // Unit Testing
     //
+    #[test(creator = @0x123, user1 = @0x456)]
+    fun test_mint_and_transfer(creator: &signer, user1: &signer) {
+        // Creator creates the Property Collection
+        create_property_collection(creator);
+
+        // Creator mints a Fractional Share Token
+        let token_name = string::utf8(b"Fractional Share Token #1");
+        let token_description = string::utf8(b"Fractional Share Token #1 Description");
+        let token_uri = string::utf8(b"Fractional Share Token #1 URI");
+
+        // Creates Fractional Share Token 
+        mint_fractional_share_token(
+            creator,
+            token_description,
+            token_name,
+            token_uri,
+        );
+        let collection_name = string::utf8(COLLECTION_NAME);
+        let token_address = token::create_token_address(
+            &signer::address_of(creator),
+            &collection_name,
+            &token_name
+        );
+        let token = object::address_to_object<FractionalShareToken>(token_address);
+        // Asserts the owner of the token is the creator
+        assert_owner(creator, &token);
+        // Transfers the token to user1
+        transfer_fractional_share(creator, user1, token);
+        // Asserts the new owner of the token is user1
+        assert_owner(user1, &token);
+        // Asserts the burnt token exists before burning
+        assert_token_exists(&token);
+    }
+
+    #[test(creator = @0x123)]
+    fun test_mint_and_burn(creator: &signer) acquires FractionalShareToken {
+        // Creator creates the Property Collection
+        create_property_collection(creator);
+
+        // Creator mints a Fractional Share Token
+        let token_name = string::utf8(b"Fractional Share Token #1");
+        let token_description = string::utf8(b"Fractional Share Token #1 Description");
+        let token_uri = string::utf8(b"Fractional Share Token #1 URI");
+
+        // Creates Fractional Share Token 
+        mint_fractional_share_token(
+            creator,
+            token_description,
+            token_name,
+            token_uri,
+        );
+        let collection_name = string::utf8(COLLECTION_NAME);
+        let token_address = token::create_token_address(
+            &signer::address_of(creator),
+            &collection_name,
+            &token_name
+        );
+        let token = object::address_to_object<FractionalShareToken>(token_address);
+        // Asserts the owner of the token is the creator
+        assert_owner(creator, &token);
+        // Asserts the burnt token exists before burning
+        assert_token_exists(&token);
+        // Burns the token
+        burn(creator, token);
+        // Asserts the burnt token does not exist after burning
+        //assert_token_does_not_exist(&token);
+    }   
 
 }
