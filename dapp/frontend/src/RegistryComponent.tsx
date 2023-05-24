@@ -101,7 +101,7 @@ export const RegistryComponent = () => {
     // transaction payload to be submitted
     const payload = {
         type: "entry_function_payload",
-        function: `${MODULE_ADDRESS}::registry::Init_registry`,
+        function: `${MODULE_ADDRESS}::registry::Init_registry`, // TODO: Init_registry -> init_registry
         type_arguments: [],
         arguments: [],
     };

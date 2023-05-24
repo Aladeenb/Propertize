@@ -69,10 +69,11 @@ module propertize_addr::registry{
     * @param account - account signer executing the function
     * 
     **/
-    public entry fun Init_registry(
+
+    public entry fun init_registry(
         account: &signer,
     ) {
-        //assert_registry_does_not_exist(account);
+        //TODO: assert_registry_does_not_exist(account);
 
         // Instantiate `Registry` resource 
         let new_registry = Registry {
@@ -94,29 +95,12 @@ module propertize_addr::registry{
         let new_property = RegisteredProperty {
             property_address: property_address/*verify the use*/,
             owner_address: signer_address,
-            timestamp_seconds: 0, /*must correspond to the current time*/
+            timestamp_seconds: 0, /*should correspond to the current time*/
         };    
 
         // adds the new property into the registry
         table::upsert(&mut registry.properties_list, signer_address, new_property);    
     }
 
-    /* 
-    * ownership transfer
-    * this will also require updating `RegisteredProperty`? 
-    * TODO: check `object` module to prevent writing alrdy existing lines.
-    * NOTES: maybe it is useless to do so anyways cuz there will always be the explorer.
-    */
-    public(friend) entry fun transfer_property_ownership(
-    // TODO: transfer vs linear transfer?
-    // TODO: only Oobjects from Registry can be transfered
-        from: &signer,
-        object: Object<FractionalShareToken>,
-        to: address,
-    ) {
-    // TODO: assert the signer is the property owner
-    // TODO: assert the reciever is not the property owner
-        object::transfer(from, object, to);
-        // TODO: update the property owner?
-    }
+    public(friend) entry fun transfer_property_ownership() {}
 }
