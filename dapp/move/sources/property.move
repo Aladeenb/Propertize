@@ -46,6 +46,7 @@ module propertize_addr::property {
     /// The remaining supply is sufficient
     const EREMAINING_SUPPLY_IS_NOT_SUFFICIENT: u64=6;
 
+    // TODO: these shouldn't be constants.
     /// The Property token collection name
     const COLLECTION_NAME: vector<u8> = b"Property Collection Name";
     /// The Property token collection description
@@ -129,8 +130,6 @@ module propertize_addr::property {
         create_property_collection(sender);
     }
 
-
-
     //
     // View functions
     //
@@ -203,9 +202,15 @@ module propertize_addr::property {
 
         // Initializes the ownership share percentage as 20.
         // TODO: the ownership share percentage should not be defined when minting the token
+        let properties = property_map::prepare_input(vector[], vector[], vector[]);
+        property_map::init(&constructor_ref, properties);
+        property_map::add_typed(
+            &property_mutator_ref,
+            string::utf8(b"Ownership Share"),
+            20
+        );
 
-
-        // Published the FractionalShareToken resource
+        // Publishes the FractionalShareToken resource
         let fractional_share_token = FractionalShareToken {
             burn_ref,
             property_mutator_ref,
@@ -215,10 +220,10 @@ module propertize_addr::property {
 
     /// Burn the token, and destroy the FractionalShareToken
     /// and OwnershipShare resources, and the property map.
-    // TODO: something wrong with `burn` function: https://github.com/Aladeenb/Propertize/issues/3 
     public entry fun burn(creator: &signer, token: Object<FractionalShareToken>) acquires FractionalShareToken {
         assert_creator(creator, &token);
         let fractional_share_token = move_from<FractionalShareToken>(object::object_address(&token));
+        
         let FractionalShareToken {
             burn_ref,
             property_mutator_ref,
@@ -305,7 +310,6 @@ module propertize_addr::property {
         // Asserts the burnt token exists before burning
         assert_token_exists(&token);
     }
-    // Test not passing: https://github.com/Aladeenb/Propertize/issues/3
     #[test(creator = @0x123)]
     fun test_mint_and_burn(creator: &signer) acquires FractionalShareToken {
         // Creator creates the Property Collection
