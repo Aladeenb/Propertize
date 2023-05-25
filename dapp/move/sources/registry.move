@@ -1,3 +1,10 @@
+/*
+    After creating the Property collection, and minting its shares tokens 
+    (fractionalShares), they will have to be registered. The `registry` module
+    is a layer dedicated to regulations where all the necessary steps to tokenize 
+    the shares is being defined/set. For the time being, we assume there are no
+    constraints for registering and we only interested in interacting with it.  
+*/
 module propertize_addr::registry{
     use std::signer;
     use aptos_std::table::{Self, Table};
@@ -11,27 +18,27 @@ module propertize_addr::registry{
     //
     const ERROR_REGISTRY_EXISTS: u64 = 0;
     const ERROR_REGISTERY_DOES_NOT_EXIST: u64 = 1;
+    const ENOT_A_PROPERTY: u64 = 1;
     
     //
     // Structs
     //
-    /*consider removing `drop`*/
-    struct RegisteredProperty has drop, store {
-        property_address: address,  // TODO: should not be promped by the user
+    struct RegisteredToken has drop, store {    // RegisteredProperty -> RegisteredToken
+        // only the address of fractional share token will be needed.
+        token_address: address,  // TODO: should not be promped by the user
         owner_address: address, // to be updated everytime ownership is changed
         timestamp_seconds: u64,
         // TODO: add event
     }
 
     struct Registry has key {
-        properties_list: Table<address, RegisteredProperty>,
-        // signer_capability: account::SignerCapability,
-
+        tokens_list: Table<address, RegisteredToken>,
     }
 
     //
     // Asserts
     //
+    // TODO: Asserts registry exists
     public fun assert_registry_exists(
         account_address: address,
     ) {
@@ -39,6 +46,7 @@ module propertize_addr::registry{
         //assert!(table::exists<Registry>(account_address), ERROR_REGISTERY_DOES_NOT_EXIST);
     }
 
+    // TODO: Asserts registry does not exist
     public fun assert_registry_does_not_exist(
         account_address: address,
     ) {
@@ -47,17 +55,17 @@ module propertize_addr::registry{
 
     public fun assert_lengths_are_equal(
         addresses: vector<address>,
-        property_addresses: vector<address>,
+        token_addresses: vector<address>,
         timestamps: vector<u64>
     ) {
         // TODO: assert that the lengths of `addresses`, `property_addresses`, and `timestamps` are all equal
     }
 
-    public fun assert_property_address_exists(){
+    public fun assert_token_address_exists(){
         // TODO
     }
 
-    public fun assert_property_address_does_not_exist(){
+    public fun assert_token_address_does_not_exist(){
         // TODO
     }
 
@@ -77,30 +85,39 @@ module propertize_addr::registry{
 
         // Instantiate `Registry` resource 
         let new_registry = Registry {
-            properties_list: table::new(),
+            tokens_list: table::new(),
         };
         // move Registry resource under the signer account
         move_to(account, new_registry);
     }
 
-    public entry fun register_property(
+    public entry fun register_token(
         account: &signer,
-        property_address: address
+        token_address: address
     ) acquires Registry {
+        // TODO: asserts account is registry owner.
+        // TODO: asserts token is not registered.
         // gets the signer address
         let signer_address = signer::address_of(account);
 
         let registry = borrow_global_mut<Registry>(signer_address);
 
-        let new_property = RegisteredProperty {
-            property_address: property_address/*verify the use*/,
+        let new_token = RegisteredToken {
+            token_address: token_address/*verify the use*/,
             owner_address: signer_address,
             timestamp_seconds: 0, /*should correspond to the current time*/
         };    
 
-        // adds the new property into the registry
-        table::upsert(&mut registry.properties_list, signer_address, new_property);    
+        // adds the new token into the registry
+        table::upsert(&mut registry.tokens_list, signer_address, new_token);    
     }
 
-    public(friend) entry fun transfer_property_ownership() {}
+    public(friend) entry fun transfer_token_ownership() {}
+
+    //
+    // Unit testing
+    // 
+    // TODO: create registry and add FractionalShare Token
+    // TODO: create more than one registry
+    // TODO: create registry and register a non-FractionaShare Token
 }

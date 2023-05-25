@@ -15,9 +15,12 @@
         - Valuation: The estimated value of the FractionalShare.
         - Governance and voting rights?
         - History: Historical data of the FractionalShare.
+        - Levels/Badges: Defines how much of custody the FractionalShare represents.
     - TODO: mint/burn FractionalShare tokens must not be "direct". 
     It won't be convinient for entities to have their FractionalShare tokens burnt
     without any notice or agreement. A protection layer have to be implemented.
+    DAO implementation is one solution for that.
+    - TODO: What is internal collection?
 */
 module propertize_addr::property {
     use std::error;
@@ -30,42 +33,46 @@ module propertize_addr::property {
     use aptos_token_objects::token;
     use aptos_token_objects::property_map;
 
-    /// To use transfer()
+    // To use transfer()
     friend propertize_addr::marketplace; 
 
     //
     // Errors
     //
-    /// The token does not exist
+    // The token does not exist
     const ETOKEN_DOES_NOT_EXIST: u64 = 1;
-    /// The token  exists
+    // The token  exists
     const ETOKEN_EXISTS: u64 = 2;
-    /// The signer is not the token creator 
+    // The signer is not the token creator 
     const ENOT_CREATOR: u64 = 3;
-    /// The signer is not the token owner
+    // The signer is not the token owner
     const ENOT_OWNER: u64 = 4;
-    /// The remaining supply is null
+    // The remaining supply is null
     const EREMAINING_SUPPLY_IS_NULL: u64 = 5;
-    /// The remaining supply is sufficient
+    // The remaining supply is sufficient
     const EREMAINING_SUPPLY_IS_NOT_SUFFICIENT: u64 = 6;
+    // The collection does not exist
+    const ECOLLECTION_EXISTS: u64 = 7;
+    // The collection exists
+    const ECOLLECTION_DOES_NOT_EXIST: u64 = 8;
 
     // TODO: these shouldn't be constants.
-    /// The Property token collection name
+    // The Property token collection name
     const COLLECTION_NAME: vector<u8> = b"Property";
-    /// The Property token collection description
+    // The Property token collection description
     const COLLECTION_DESCRIPTION: vector<u8> = b"Property Collection Description";
-    /// The Property token collection URI
+    // The Property token collection URI
     const COLLECTION_URI: vector<u8> = b"Property Collection URI";
-    /// The Property token Supply, fixed to 100 for now.
+    // The Property token Supply, fixed to 100 for now.
     const SUPPLY: u64 = 100; 
 
     //
     // Structs
     //
     struct FractionalShareToken has key {
-        /// Ref to burn token
+        // Ref to burn token
         burn_ref: token::BurnRef,
-        /// Ref to modify the state of props of the token
+        // Ref to modify the state of props of the token
         property_mutator_ref: property_map::MutatorRef,
     }
 
@@ -76,7 +83,25 @@ module propertize_addr::property {
     //
     // Asserts
     //
-    /// Asserts that the token exists
+    // Asserts that the collection exists
+    //inline fun assert_collection_exists<T: key>(collection: &Object<T>){
+    //    let collection_address = object::object_address(collection);
+    //    assert!(
+    //        exists<T>(collection_address),
+    //        error::not_found(ECOLLECTION_DOES_NOT_EXIST),
+    //    );
+    //}
+
+    // Asserts that the collection does not exist
+    //inline fun assert_collection_does_not_exist<T: key>(token: &Object<T>){
+    //    let token_address = object::object_address(token);
+    //    assert!(
+    //        exists<T>(token_address),
+    //        error::not_found(ETOKEN_DOES_NOT_EXIST),
+    //    );
+    //}
+
+    // Asserts that the token exists
     inline fun assert_token_exists<T: key>(token: &Object<T>){
         let token_address = object::object_address(token);
         assert!(
@@ -94,7 +119,7 @@ module propertize_addr::property {
         );
     }
 
-    /// Asserts the owner is the `creator`
+    // Asserts the owner is the `creator`
     inline fun assert_creator<T: key>(creator: &signer, token: &Object<T>) {
         assert!(
             token::creator(*token) == signer::address_of(creator),
@@ -102,7 +127,7 @@ module propertize_addr::property {
         );
     }
 
-    /// Asserts the owner is the `owner`
+    // Asserts the owner is the `owner`
     inline fun assert_owner<T: key>(owner: &signer, token: &Object<T>) {
         assert!(
             object::owner(*token) == signer::address_of(owner),
@@ -110,7 +135,7 @@ module propertize_addr::property {
         );
     }
 
-    /// Asserts the remaining supply is not 0
+    // Asserts the remaining supply is not 0
     inline fun assert_remaining_supply_is_not_null<T: key>(remaining_supply: u64) {
         assert!(
             remaining_supply > 0,
@@ -118,28 +143,31 @@ module propertize_addr::property {
         );
     } 
 
-    /// TODO: Asserts max supply is not 0
+    // TODO: Asserts max supply is not 0
 
-    /// TODO: Asserts the collection exists
+    // TODO: Asserts the collection exists
     //inline fun assert_collection_exists(){
     //    collection::check_collection_exists(mutator_ref.self); 
     //} 
 
 
-    /// TODO: Asserts the remaining supply is greater or equal to the new ownership share  
+    // TODO: Asserts the remaining supply is greater or equal to the new ownership share  
     inline fun assert_remaining_supply_is_sufficient<T: key>(){}
 
     //
     // View Functions
     //
+    // TODO: Returns the collection
+
+
+    // Returns the fractional share token
     #[view]
-    /// Returns the fractional share token
     public fun view_fractional_share_token(token: Object<FractionalShareToken>): Object<FractionalShareToken> {
         token
     }
 
+    // Returns the ownership percentage of the fractional share token
     #[view]
-    /// Returns the ownership percentage of the fractional share token
     public fun view_fractional_share_percentage(token: Object<FractionalShareToken>): u64 acquires OwnershipShare {
         let ownership_percentage = borrow_global<OwnershipShare>(object::object_address(&token));
         ownership_percentage.ownership_percentage
@@ -148,6 +176,46 @@ module propertize_addr::property {
     //
     // Mutators
     //
+    // Set Collection Description
+    //public entry fun set__collection_description(
+    //    owner: &signer,
+    //    new_description: String,
+    //) {
+    //    // TODO: Asserts that collection `owner` is the one executing the function.
+    //
+    //    let constructor_ref = create_collection_helper(owner, collection_name);
+    //    let mutator_ref = collection::generate_mutator_ref(&constructor_ref);
+    //    collection::set_description(&mutator_ref, new_description);
+    //}
+    
+    //Set Collection URI
+    //set_uri(&mutator_ref, uri);
+
+    // Set the ownership share percentage.
+    // This is directly correlated with total supply decalred above.
+    //public entry fun set_ownership_share_percentage(
+    //    creator: &signer,
+    //    token: Object<FractionalShareToken>,
+    //    new_ownership_share_pecentage: u64
+    //) acquires OwnershipShare, FractionalShareToken {
+    //  // TODO: how to get the remaining token supply?
+    //  let remaining_supply = supply;
+    //  // Asserts that `creator` is the collection owner.
+    //  assert_creator(creator, &token);
+    //  // Asserts that remaining supply is not null
+    //  assert_remaining_supply_is_not_null(remaining_supply);
+    //  // TODO: Asserts that the new ownership share pecentage is less or equal than the available supply
+    //  //assert_remaining_supply_is_sufficient();
+    //  let token_address = object::object_address(&token);
+    //  let ownership_share_pecentage = borrow_global_mut<OwnershipShare>(token_address);
+
+    //  // Updates the remaining total supply
+    //  // TODO: probs there is a better way to update the remaining supply
+    //  supply = supply + (ownership_share_pecentage - new_ownership_share_pecentage);
+    //  // Updates the ownership share percentage
+    //  ownership_share_pecentage = new_ownership_share_pecentage;
+    //}
+
     /*
     * Creates the property collection.
     * This function creates a collections with fixed supply alongside
@@ -159,11 +227,11 @@ module propertize_addr::property {
         description: String,
         name: String,
         uri: String,
-        ) {                   
+    ) {                   
         //let description = string::utf8(COLLECTION_DESCRIPTION);
         //let name = string::utf8(COLLECTION_NAME);
         //let uri = string::utf8(COLLECTION_URI);
-        /// Creates the property collection
+        // Creates the property collection
         collection::create_fixed_collection(
             creator,
             description,
@@ -172,28 +240,12 @@ module propertize_addr::property {
             option::none(),
             uri
         );
-        }
-    /// Set Collection Description
-    //public entry fun set__collection_description(
-    //    owner: &signer,
-    //    new_description: String,
-    //) {
-    //    // TODO: Asserts that collection `owner` is the one executing the function.
-    //
-    //    let collection = string::utf8(COLLECTION_NAME); 
-    //
-    //    let constructor_ref = create_collection_helper(owner, collection_name);
-    //    let mutator_ref = collection::generate_mutator_ref(&constructor_ref);
-    //    collection::set_description(&mutator_ref, new_description);
-    //}
-    
-    ///Set Collection URI
-    //set_uri(&mutator_ref, uri);
+    }
 
     //
     // Entry functions
     //
-    /// Mints fractional share token (only the collection owner can call this function)
+    // Mints fractional share token (only the collection owner can call this function)
     public entry fun mint_fractional_share_token(
         owner: &signer,
         collection_name: String,
@@ -236,8 +288,8 @@ module propertize_addr::property {
         move_to(&object_signer, fractional_share_token);
     }
 
-    /// Burn the token, and destroy the FractionalShareToken
-    /// and OwnershipShare resources, and the property map.
+    // Burn the token, and destroy the FractionalShareToken
+    // and OwnershipShare resources, and the property map.
     public entry fun burn(creator: &signer, token: Object<FractionalShareToken>) acquires FractionalShareToken {
         assert_creator(creator, &token);
         let fractional_share_token = move_from<FractionalShareToken>(object::object_address(&token));
@@ -252,7 +304,7 @@ module propertize_addr::property {
         // TODO: should the supply be decremented after burning a token?
     } 
 
-    /// Transfer the fractional share token to `transfer_to` address.
+    // Transfer the fractional share token to `transfer_to` address.
     public(friend) entry fun transfer_fractional_share(owner: &signer, to: &signer, token: Object<FractionalShareToken>) {
         // Assert token exists
         assert_token_exists(&token);
@@ -262,34 +314,31 @@ module propertize_addr::property {
 
     }
 
-    /// TODO: transfer the collection to another address.
-    //public entry fun transfer_property_collection(owner: &signer, to: &signer) {
-    //}
+    // Transfers the collection to another address.
+    /*
+    * transferring a collection involves transferring all the tokens belongs
+    * to that collection. This will require ungated_transfer to be enabled. 
+    * While transferring a collection is possible, doing so will require the
+    * the consent of token owners. Setting a DAO dedicated for each collection 
+    * is one solution for this.
+    */
+    public entry fun transfer_property_collection(
+        owner: &signer, 
+        to: &signer,
+        collection_name: String,
+    ) { 
+        let collection_address = collection::create_collection_address(&signer::address_of(owner), &collection_name);
+        let collection = object::address_to_object<collection::Collection>(collection_address);
+        // TODO: Asserts the collection exists?
+        //collection::check_collection_exists(collection_address);
+        // TODO: Asserts `owner` is the property owner
+        // TODO: Asserts `to` is a valid address
+        //object::enable_ungated_transfer
+        object::transfer(owner, collection, signer::address_of(to));
+        //object::disable_ungated_transfer
+    }
 
-    /// Set the ownership share percentage.
-    /// This is directly correlated with total supply decalred above.
-    //public entry fun set_ownership_share_percentage(
-    //    creator: &signer,
-    //    token: Object<FractionalShareToken>,
-    //    new_ownership_share_pecentage: u64
-    //) acquires OwnershipShare, FractionalShareToken {
-    //  // TODO: how to get the remaining token supply?
-    //  let remaining_supply = supply;
-    //  // Asserts that `creator` is the collection owner.
-    //  assert_creator(creator, &token);
-    //  // Asserts that remaining supply is not null
-    //  assert_remaining_supply_is_not_null(remaining_supply);
-    //  // TODO: Asserts that the new ownership share pecentage is less or equal than the available supply
-    //  //assert_remaining_supply_is_sufficient();
-    //  let token_address = object::object_address(&token);
-    //  let ownership_share_pecentage = borrow_global_mut<OwnershipShare>(token_address);
 
-    //  // Updates the remaining total supply
-    //  // TODO: probs there is a better way to update the remaining supply
-    //  supply = supply + (ownership_share_pecentage - new_ownership_share_pecentage);
-    //  // Updates the ownership share percentage
-    //  ownership_share_pecentage = new_ownership_share_pecentage;
-    //}
         
 
     //
@@ -371,9 +420,25 @@ module propertize_addr::property {
         assert_token_does_not_exist(&token);
     }   
 
-    #[test]
-    fun test_transfer_collection(){}
+    #[test(owner = @0x123, to = @0x456)]
+    #[expected_failure(abort_code = 0x50003, location = aptos_framework::object)]
+    fun test_create_and_transfer_collection(owner: &signer, to: &signer){
+        let owner_address = signer::address_of(owner);
+        let collection_name = string::utf8(b"Property Collection #1");
+        let collection_description = string::utf8(b"Property Collection #1 Description");
+        let collection_uri = string::utf8(b"Property Collection #1 URI");
+        // Creator creates the Property Collection
+        create_property_collection(owner, collection_description, collection_name, collection_uri);
+        let collection = object::address_to_object<collection::Collection>(
+            collection::create_collection_address(&owner_address, &collection_name),
+        );
+        // Asserts the collection owner is `owner`
+        assert!(object::owner(collection) == owner_address, 1);
+        // TODO: Assert the collection exists
+        object::transfer(owner, collection, signer::address_of(to));
+    }
 
+    // TODO
     #[test]
     fun test_view_and_set_collection_properties(){}
 

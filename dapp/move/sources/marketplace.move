@@ -18,8 +18,8 @@ module propertize_addr::marketplace {
     //
     // Asserts
     //
-    /// The token is registered
-    /// The token is not registered
+    // TODO: Asserts The token is registered
+    // TODO: Asserts The token is not registered
 
     //
     // Initialize Function

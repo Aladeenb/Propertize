@@ -20,8 +20,8 @@ import {
 import { MODULE_ADDRESS, PROVIDER } from './constants';
 import { Spin } from 'antd';
 
-type RegisteredProperty = {
-  property_address: string;
+type RegisteredToken = {
+  token_address: string;
   owner_address: string;
   timestamp_seconds: number; //TODO: enforce this to be uint64
 };
@@ -35,15 +35,15 @@ export const RegistryComponent = () => {
   // States
   //
   const [accountHasRegistry, setAccountHasRegistry] = useState<boolean>(false);
-  const [propertyAdded, setPropertyAdded] = useState<boolean>(false);
-  const [registeredProperties, setRegisteredProperties] = useState<RegisteredProperty[]>([]);
-  const [newRegisterProperty, setNewRegisterProperty] = useState<string>("");
+  const [tokenAdded, setTokenAdded] = useState<boolean>(false);
+  const [registeredProperties, setRegisteredProperties] = useState<RegisteredToken[]>([]);
+  const [newRegisterToken, setNewRegisterToken] = useState<string>("");
   /// spinner
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
 
-  const onRegisterProperty = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onRegisterToken = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    setNewRegisterProperty(value);
+    setNewRegisterToken(value);
   }
 
   const fetchRegistry = async () => {
@@ -59,18 +59,18 @@ export const RegistryComponent = () => {
       const tableHandle = (RegistryResource as any).data.properties.handle;
       
       // Table struct from the module
-      // properties_list: Table<address, RegisteredProperty>
+      // properties_list: Table<address, RegisteredToken>
       let registeredProperties = [];
       let counter = 1;
 
       while (counter <= 3){
         const tableItem = {
           key_type: "address",
-          value_type: `${MODULE_ADDRESS}::registry::registeredProperty`,
+          value_type: `${MODULE_ADDRESS}::registry::registeredToken`,
           key: `${counter}`,
         };
-        const registeredProperty = await PROVIDER.getTableItem(tableHandle, tableItem);
-        registeredProperties.push(registeredProperty);
+        const registeredToken = await PROVIDER.getTableItem(tableHandle, tableItem);
+        registeredProperties.push(registeredToken);
         counter++;
       }
       
@@ -120,8 +120,8 @@ export const RegistryComponent = () => {
     }
   }
 
-  /// registerProperty
-  const onPropertyRegistered = async () => {
+  /// registerToken
+  const onTokenRegistered = async () => {
     // check for connected account
     if (!account) return;
     setTransactionInProgress(true);
@@ -129,14 +129,14 @@ export const RegistryComponent = () => {
     // tx payload to be submited
     const payload = {
       type: "entry_function_payload",
-      function: `${MODULE_ADDRESS}::registry::register_property`,
+      function: `${MODULE_ADDRESS}::registry::register_token`,
       type_arguments: [],
-      arguments: [newRegisterProperty],
+      arguments: [newRegisterToken],
     }
 
     // object to be stored into local state
-    const newRegisterPropertyToPush = {
-      property_address: newRegisterProperty,
+    const newRegisterTokenToPush = {
+      token_address: newRegisterToken,
       owner_address: account.address,
       timestamp_seconds: 0, // TODO: get timestamp
     };
@@ -151,13 +151,13 @@ export const RegistryComponent = () => {
       let newRegisterProperties = [...registeredProperties];
 
       // add item to the array
-      newRegisterProperties.push(newRegisterPropertyToPush);
+      newRegisterProperties.push(newRegisterTokenToPush);
 
       // set state
       setRegisteredProperties(newRegisterProperties);
 
       // clear input
-      setNewRegisterProperty("");
+      setNewRegisterToken("");
     } catch (error: any) {
       console.log("error", error);
     } finally {
@@ -194,17 +194,17 @@ export const RegistryComponent = () => {
                   Registry list 
                 </Heading>
                 {
-                  registeredProperties.map((registeredProperty) => (
+                  registeredProperties.map((registeredToken) => (
                     <ListItem 
-                    key={registeredProperty.owner_address}
-                    title={registeredProperty.property_address}
+                    key={registeredToken.owner_address}
+                    title={registeredToken.token_address}
                     >
                       <HStack>
                         <Text>
-                          {registeredProperty.property_address}
+                          {registeredToken.token_address}
                         </Text>
                         <Link 
-                        href={`https://explorer.aptoslabs.com/account/${registeredProperty.property_address}/`}
+                        href={`https://explorer.aptoslabs.com/account/${registeredToken.token_address}/`}
                         isExternal
                         >
                           view on Explorer
@@ -216,20 +216,20 @@ export const RegistryComponent = () => {
               </List>
               <Box>
                 {/*TODO: make this a popover*/}
-                <Text>Register Property:</Text>
+                <Text>Register Token:</Text>
                 <InputGroup size='md'>
                   <Input
                     pr='4.5rem'
-                    onChange={(event) => onRegisterProperty(event)}
-                    placeholder='Enter property address'
-                    value={newRegisterProperty}
+                    onChange={(event) => onRegisterToken(event)}
+                    placeholder='Enter token address'
+                    value={newRegisterToken}
                     //type={}
                   />
                   <InputRightElement width='4.5rem'>
                     <Button
                       h='1.75rem' 
                       size='sm'
-                      onClick={onPropertyRegistered}
+                      onClick={onTokenRegistered}
                     >
                       Register
                     </Button>
