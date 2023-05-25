@@ -28,8 +28,7 @@ The main focus for now is to implement the follwoing functionalties:
  - Fractional share token `sale` via the marketplace
 
 Below is what was done so far:
-### Modules
-#### Property
+1) **Property**
 - `Property` is a collection of `fractionalShare` tokens 
 - `FractionalShare` tokens represent fractional shares of the property.
 - Only the collection owner can mint/burn fractionalShare tokens.
@@ -37,6 +36,8 @@ Below is what was done so far:
 - `FractionalShare` tokens have custom attribute called `OwnershipShare`.
 - `OwnershipShare` represents the percentage of Property ownership 
 belongs to the `FractionalShare`. And it is correlated with the collection `supply`
+
+2) **Registry**
 
 ##### TODO
 - The owner of the collection is the one who should be able 
