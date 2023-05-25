@@ -19,7 +19,7 @@ Moreover, Propertize offers an additional advantage to real estate owners facing
 - Based on how much of % owned, the DAO participants have different roles and privilges e.g:
     - 0.1% - 10%: only yields earned from the property (such as renting)
     - 10.1% - 30%: yields + decision making votes
-    - => 30.1%: idk yet but you get the idea.
+    - >= 30.1%: idk yet but you get the idea.
 
 The main focus for now is to implement the follwoing functionalties:
  - Property `creating` and Fractional share token `minting`
