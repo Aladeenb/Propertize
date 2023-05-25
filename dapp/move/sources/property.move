@@ -163,12 +163,21 @@ module propertize_addr::property {
     // Returns the fractional share token
     #[view]
     public fun view_fractional_share_token(token: Object<FractionalShareToken>): Object<FractionalShareToken> {
+        // TODO: Asserts token exists
         token
+    }
+
+    #[view]
+    public fun view_fractional_share_token_address(token: Object<FractionalShareToken>): address {
+        // TODO: Asserts token exists
+        let token_address = object::object_address(&token);
+        token_address
     }
 
     // Returns the ownership percentage of the fractional share token
     #[view]
     public fun view_fractional_share_percentage(token: Object<FractionalShareToken>): u64 acquires OwnershipShare {
+        // TODO: Asserts token exists
         let ownership_percentage = borrow_global<OwnershipShare>(object::object_address(&token));
         ownership_percentage.ownership_percentage
     }
@@ -222,7 +231,7 @@ module propertize_addr::property {
     * the description, the name, and the URI.
     TODO: what is royalty used for?
     */
-    fun create_property_collection(
+    public fun create_property_collection(
         creator: &signer,
         description: String,
         name: String,
@@ -305,7 +314,7 @@ module propertize_addr::property {
     } 
 
     // Transfer the fractional share token to `transfer_to` address.
-    public(friend) entry fun transfer_fractional_share(owner: &signer, to: &signer, token: Object<FractionalShareToken>) {
+    public entry fun transfer_fractional_share(owner: &signer, to: &signer, token: Object<FractionalShareToken>) {
         // Assert token exists
         assert_token_exists(&token);
         // Assert the owner is the the owner of the token to be transferred 
@@ -372,6 +381,8 @@ module propertize_addr::property {
             &token_name
         );
         let token = object::address_to_object<FractionalShareToken>(token_address);
+        // Gets token address
+        view_fractional_share_token_address(token);
         // Asserts the owner of the token is the creator
         assert_owner(creator, &token);
         // Transfers the token to user1
@@ -380,6 +391,8 @@ module propertize_addr::property {
         assert_owner(user1, &token);
         // Asserts the burnt token exists before burning
         assert_token_exists(&token);
+        // Gets token address
+        view_fractional_share_token_address(token);
     }
 
     #[test(creator = @0x123)]
