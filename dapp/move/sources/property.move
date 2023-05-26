@@ -20,9 +20,12 @@
     It won't be convinient for entities to have their FractionalShare tokens burnt
     without any notice or agreement. A protection layer have to be implemented.
     DAO implementation is one solution for that.
+    - TODO: Ownership share is mutable and can be modified even after minting
+    the fractional share token. I'm still exploring ways for a good implementation.
     - TODO: What is internal collection?
 */
 module propertize_addr::property {
+    // TODO: alphabetical order
     use std::error;
     use std::option;
     use std::string::{Self, String};
@@ -128,7 +131,7 @@ module propertize_addr::property {
     }
 
     // Asserts the owner is the `owner`
-    inline fun assert_owner<T: key>(owner: &signer, token: &Object<T>) {
+    public inline fun assert_owner<T: key>(owner: &signer, token: &Object<T>) {
         assert!(
             object::owner(*token) == signer::address_of(owner),
             error::permission_denied(ENOT_OWNER),

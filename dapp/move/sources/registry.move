@@ -3,12 +3,14 @@
     (fractionalShares), they will have to be registered. The `registry` module
     is a layer dedicated to regulations where all the necessary steps to tokenize 
     the shares is being defined/set. For the time being, we assume there are no
-    constraints for registering and we only interested in interacting with it.  
+    constraints for registering and we only interested in interacting with it.
+    - TODO: register objects?  
 */
 module propertize_addr::registry{
+    // TODO: alphabetical order
     use std::signer;
     use aptos_std::table::{Self, Table};
-    use aptos_framework::object::{Self, Object};
+    use aptos_framework::object;
     use propertize_addr::property::{FractionalShareToken};
 
     use propertize_addr::property;
@@ -19,11 +21,13 @@ module propertize_addr::registry{
     const ERROR_REGISTRY_EXISTS: u64 = 0;
     const ERROR_REGISTERY_DOES_NOT_EXIST: u64 = 1;
     const ENOT_A_PROPERTY: u64 = 1;
+    // The signer is not the token owner
+    const ENOT_OWNER: u64 = 4;
     
     //
     // Structs
     //
-    struct RegisteredToken has drop, store {    // RegisteredProperty -> RegisteredToken
+    struct RegisteredToken has drop, store {  
         // only the address of fractional share token will be needed.
         token_address: address,  // TODO: should not be promped by the user
         owner_address: address, // to be updated everytime ownership is changed
@@ -51,22 +55,6 @@ module propertize_addr::registry{
         account_address: address,
     ) {
         // TODO: assert that `Registry` does not exist
-    }
-
-    public fun assert_lengths_are_equal(
-        addresses: vector<address>,
-        token_addresses: vector<address>,
-        timestamps: vector<u64>
-    ) {
-        // TODO: assert that the lengths of `addresses`, `property_addresses`, and `timestamps` are all equal
-    }
-
-    public fun assert_token_address_exists(){
-        // TODO
-    }
-
-    public fun assert_token_address_does_not_exist(){
-        // TODO
     }
 
     //
@@ -106,7 +94,7 @@ module propertize_addr::registry{
         let registry = borrow_global_mut<Registry>(signer_address);
 
         let new_token = RegisteredToken {
-            token_address: token_address/*verify the use*/,
+            token_address: token_address,
             owner_address: signer_address,
             timestamp_seconds: 0, /*should correspond to the current time*/
         };    
@@ -121,7 +109,8 @@ module propertize_addr::registry{
         to: &signer,
         token_address: address
     ) { 
-        // TODO: Assert to has a registry      
+        // TODO: Asserts `to` has a registry  
+        // TODO: Asserts token is registered    
         property::transfer_fractional_share(
             owner, 
             to, 
@@ -183,6 +172,8 @@ module propertize_addr::registry{
         register_token(owner,  token_address);
         // Tranfers the minted fractional share token
         transfer_registered_token(owner, to, token_address);
+        // Assert `to` is the new owner of the token
+        property::assert_owner(to, &token);
     }
 
 }
