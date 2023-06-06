@@ -234,7 +234,7 @@ module propertize_addr::property {
     * the description, the name, and the URI.
     TODO: what is royalty used for?
     */
-    public fun create_property_collection(
+    public entry fun create_property_collection(
         creator: &signer,
         description: String,
         name: String,

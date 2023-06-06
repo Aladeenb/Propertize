@@ -6,12 +6,8 @@
 */
 module propertize_addr::marketplace {
 
-    use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::object;
     use aptos_std::table::{Self, Table};
-    use propertize_addr::property::{FractionalShareToken};
     use std::signer;
-    use std::string::{Self, String};
 
     //
     // Errors

@@ -44,7 +44,7 @@ module propertize_addr::registry{
     //
     // TODO: Asserts registry exists
     public fun assert_registry_exists(
-        account_address: address,
+
     ) {
         // assert that `Registry` exists
         //assert!(table::exists<Registry>(account_address), ERROR_REGISTERY_DOES_NOT_EXIST);
@@ -52,7 +52,7 @@ module propertize_addr::registry{
 
     // TODO: Asserts registry does not exist
     public fun assert_registry_does_not_exist(
-        account_address: address,
+
     ) {
         // TODO: assert that `Registry` does not exist
     }
@@ -143,9 +143,8 @@ module propertize_addr::registry{
         let collection_uri = string::utf8(b"https://www.aladeen.me");
         property::create_property_collection(owner, collection_description, collection_name, collection_uri);
         
-        let collection = object::address_to_object<collection::Collection>(
-            collection::create_collection_address(&owner_address, &collection_name),
-        );
+        collection::create_collection_address(&owner_address, &collection_name);
+
         // Mints a fractional share token
         let token_name = string::utf8(b"Fractional Share Token #1");
         let token_description = string::utf8(b"Fractional Share Token #1 Description");

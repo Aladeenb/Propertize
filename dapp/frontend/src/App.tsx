@@ -16,10 +16,11 @@ import {
   ButtonGroup,
   Container,
 } from "@chakra-ui/react"
-import { ColorModeSwitcher } from "./ColorModeSwitcher"
-import { ConnectComponent } from "./ConnectComponent"
-import { RegistryComponent } from "./RegistryComponent"
-import { PropertyComponent } from "./PropertyComponent"
+import { ColorModeSwitcher } from "./components/ColorModeSwitcher"
+import { ConnectComponent } from "./components/ConnectComponent"
+import { RegistryComponent } from "./components/RegistryComponent"
+import { PropertyComponent } from "./components/PropertyComponent"
+import FractionalShareComponent from "./components/FractionalShareComponent"
 
 export const App = () => (
   <ChakraProvider theme={theme}>
@@ -64,8 +65,27 @@ export const App = () => (
 
       {/*Property*/}
       <Container>
-        <Box>
+        <Box 
+          padding='4'
+          shadow='md' 
+          borderWidth='2px'
+          borderRadius={"10"}
+          >
+          <Heading fontSize='xl'>Property</Heading>
           <PropertyComponent/>
+        </Box>
+      </Container>
+
+      {/*Fractional Share*/}
+      <Container>
+        <Box
+          padding='4'
+          shadow='md' 
+          borderWidth='2px'
+          borderRadius={"10"}
+          >
+          <Heading fontSize='xl'>Fractional Share</Heading>
+          <FractionalShareComponent/>
         </Box>
       </Container>
     </Stack>

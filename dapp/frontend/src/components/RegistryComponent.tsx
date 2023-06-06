@@ -17,7 +17,7 @@ import {
   VStack,
   Heading
 } from '@chakra-ui/react';
-import { MODULE_ADDRESS, PROVIDER } from './constants';
+import { MODULE_ADDRESS, PROVIDER } from '../constants';
 import { Spin } from 'antd';
 
 type RegisteredToken = {
@@ -63,7 +63,8 @@ export const RegistryComponent = () => {
       let registeredProperties = [];
       let counter = 1;
 
-      while (counter <= 3){
+      // 5 is the maximum number of fractional share tokens, assuming each represents 20% 
+      while (counter <= 5){
         const tableItem = {
           key_type: "address",
           value_type: `${MODULE_ADDRESS}::registry::registeredToken`,
@@ -101,7 +102,7 @@ export const RegistryComponent = () => {
     // transaction payload to be submitted
     const payload = {
         type: "entry_function_payload",
-        function: `${MODULE_ADDRESS}::registry::Init_registry`, // TODO: Init_registry -> init_registry
+        function: `${MODULE_ADDRESS}::registry::init_registry`,
         type_arguments: [],
         arguments: [],
     };
@@ -172,7 +173,7 @@ export const RegistryComponent = () => {
   return (
     // TSX markup defines the component's UI
     <Spin spinning={transactionInProgress}>
-      <Center>
+      <Stack>
       {!accountHasRegistry ? (
         <ButtonGroup>
           <Button
@@ -189,6 +190,7 @@ export const RegistryComponent = () => {
               spacing={"10"}
               align={"Center"}
             >
+              {/*TODO: add a popover, like in the fractional share list*/}
               <List>
                 <Heading size='xs'>
                   Registry list 
@@ -216,7 +218,7 @@ export const RegistryComponent = () => {
               </List>
               <Box>
                 {/*TODO: make this a popover*/}
-                <Text>Register Token:</Text>
+                <Text>Register your Fractional Share:</Text>
                 <InputGroup size='md'>
                   <Input
                     pr='4.5rem'
@@ -240,7 +242,7 @@ export const RegistryComponent = () => {
           )
         )
       }
-      </Center>
+      </Stack>
     </Spin>
     
     
