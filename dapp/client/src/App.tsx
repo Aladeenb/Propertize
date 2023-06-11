@@ -49,20 +49,6 @@ export const App = () => (
       spacing="4"
       align={"center"}
     >
-      <Box padding='10'></Box>
-      {/*Registry*/}
-      <Container>
-        <Box 
-            padding='4'
-            shadow='md' 
-            borderWidth='2px'
-            borderRadius={"10"}
-            >
-            <Heading fontSize='xl'>Registry</Heading>
-            <RegistryComponent/>
-        </Box>
-      </Container>
-
       {/*Property*/}
       <Container>
         <Box 
@@ -86,6 +72,19 @@ export const App = () => (
           >
           <Heading fontSize='xl'>Fractional Share</Heading>
           <FractionalShareComponent/>
+        </Box>
+      </Container>
+
+      {/*Registry*/}
+      <Container>
+        <Box 
+            padding='4'
+            shadow='md' 
+            borderWidth='2px'
+            borderRadius={"10"}
+            >
+            <Heading fontSize='xl'>Registry</Heading>
+            <RegistryComponent/>
         </Box>
       </Container>
     </Stack>

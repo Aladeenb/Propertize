@@ -23,9 +23,6 @@ import {
   PopoverBody,
 } from '@chakra-ui/react';
 import { MODULE_ADDRESS, PROVIDER } from '../constants';
-//import { getTokenAddress } from "../api";
-import 'types';
-import { AptosClient, Types } from "aptos";
 
 export const FractionalShareComponent = () => {
   // Component logic and state can be defined here
@@ -38,20 +35,28 @@ export const FractionalShareComponent = () => {
     uri: string;
   } 
 
+  type TokenWithAddress = {
+    property: string;
+    name: string;
+    description: string;
+    uri: string;
+    address: string;
+  }
+
   //
   // State
   //
 
   /// Fractional Share
   const [accountHasToken, setaccountHasToken] = useState<boolean>(false); //TODO: important for managing property
-  const [createdTokens, setCreatedTokens] = useState<Token[]>([]);
+  const [createdTokens, setCreatedTokens] = useState<TokenWithAddress[]>([]);
 
   const [newCollectionName, setNewCollectionName] = useState<string>("");
   const [newTokenDescription, setNewTokenDescription] = useState<string>("");
   const [newTokenName, setNewTokenName] = useState<string>("");
   const [newTokenUri, setNewTokenUri] = useState<string>("");
 
-  const [newNoViewAddressToken, setNewNoViewAddressToken] = useState<NoViewAddressToken>();
+  const [newTokenAddress, setViewTokenAddress] = useState<string>();
 
   //const [newGetTokenAddress, setNewGetTokenAddress] = useState<string>("");
   const [newCreatedToken, setNewCreatedToken] = useState<string>("");
@@ -85,24 +90,10 @@ export const FractionalShareComponent = () => {
   };
 
   /// TODO: Get Property address
-
-  /// Get a Token's address
   const getTokenAddress = async () => {
     // check for connected account
     if (!account) return;
     setTransactionInProgress(true);
-    const client = new AptosClient(nodeUrl); 
-    const token = {
-      
-    }
-       
-    const payload: Types.ViewRequest = {
-      function: `${MODULE_ADDRESS}::property::view_fractional_share_token_address`,
-      type_arguments: [],
-      arguments: [token],
-    }; 
-    const response = await client.view(payload);
-    return response[0] as any;
   }
 
   /// creates a fractional share token
@@ -125,12 +116,12 @@ export const FractionalShareComponent = () => {
     }
 
     // object to be stored into local state
-    const newCreatedTokenToPush = {
-      collectionName: newCollectionName,
+    const newTokenWithAddressToPush = {
+      property: newCollectionName,
       description: newTokenDescription,
       name: newTokenName,
       uri: newTokenUri,
-      tokenAddress: '0x1',
+      address: account.address,
     };
 
     try {
@@ -143,7 +134,7 @@ export const FractionalShareComponent = () => {
       let newCreatedTokens = [...createdTokens];
 
       // add item to the array
-      newCreatedTokens.push(newCreatedTokenToPush);
+      newCreatedTokens.push(newTokenWithAddressToPush);
 
       // set state
       setCreatedTokens(newCreatedTokens);
@@ -156,9 +147,47 @@ export const FractionalShareComponent = () => {
     } finally {
       setTransactionInProgress(false);
     }
+
+    setNewCollectionName("");
+    setNewTokenName("");
+    setNewTokenDescription("");
+    setNewTokenUri("");
   }
 
-  /// Transfer Token
+    /// Get a Token's address
+    const useGetTokenAddress = async () => {
+      // check for connected account
+      if (!account) return;
+      setTransactionInProgress(true);
+  
+
+      // creating object with the prompted params
+      const newToken = {
+        property: newCollectionName,
+        name: newTokenName,
+        description: newTokenDescription,
+        uri: newTokenUri
+      }
+
+      const payload = {
+        function: `${MODULE_ADDRESS}::property::view_fractional_share_token_address`,
+        type_arguments: [],
+        arguments: [
+          newToken
+        ],
+      };
+      const response = await PROVIDER.view(payload);
+      return response[0] as any;
+  
+      // object to be stored into local state
+      const newTokenWithAddressToPush = {
+        property: newCollectionName,
+        description: newTokenDescription,
+        name: newTokenName,
+        uri: newTokenUri,
+        address: response,
+      };
+    }
   
 
   //
@@ -216,24 +245,10 @@ export const FractionalShareComponent = () => {
         >
         Create
         </Button>
-
-        {/* VIEW TOKEN ADDRESS*/}          
-        <Button
-        fontSize={"xx-small"}
-        onClick={getTokenAddress}
-        >
-        View 
-        </Button>
       </Stack>
 
       {accountHasToken && (
         <Box flex={8} mx="auto">
-            <Button
-            variant='outline'
-            _hover={{ backgroundColor: "teal" }}
-            >
-            Manage Property
-            </Button>
             <Popover>
               <PopoverTrigger>
                 <Box>
@@ -244,7 +259,7 @@ export const FractionalShareComponent = () => {
                     {
                       createdTokens.map((newCreatedTokenToPush) => (
                         <ListItem 
-                        key={newCreatedTokenToPush.tokenAddress}
+                        key={newCreatedTokenToPush.name}
                         title={newCreatedTokenToPush.name}
                         >
                           <HStack>
@@ -252,7 +267,7 @@ export const FractionalShareComponent = () => {
                               {newCreatedTokenToPush.name}
                             </Text>
                             <Link 
-                            href={`https://explorer.aptoslabs.com/account/${newCreatedTokenToPush.tokenAddress}/`}
+                            href={`https://explorer.aptoslabs.com/account/${newCreatedTokenToPush.address}/`}
                             isExternal
                             >
                               view on Explorer

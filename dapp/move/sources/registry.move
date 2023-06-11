@@ -8,11 +8,9 @@
 */
 module propertize_addr::registry{
     // TODO: alphabetical order
+    
     use std::signer;
     use aptos_std::table::{Self, Table};
-    use aptos_framework::object;
-    use propertize_addr::property::{FractionalShareToken};
-
     use propertize_addr::property;
 
     //
@@ -23,6 +21,8 @@ module propertize_addr::registry{
     const ENOT_A_PROPERTY: u64 = 1;
     // The signer is not the token owner
     const ENOT_OWNER: u64 = 4;
+    // The token does not exist
+    const ETOKEN_DOES_NOT_EXIST: u64 = 1;
     
     //
     // Structs
@@ -87,6 +87,7 @@ module propertize_addr::registry{
         token_address: address
     ) acquires Registry {
         // TODO: asserts account is the registry owner.
+        // TODO: asserts registered address corresspond to a token
         // TODO: asserts token is not registered.
         // gets the signer address
         let signer_address = signer::address_of(account);
@@ -106,15 +107,15 @@ module propertize_addr::registry{
     // Transfer registered Fractional share token
     public entry fun transfer_registered_token(
         owner: &signer,
-        to: &signer,
-        token_address: address
+        token_address: address,
+        to: address
     ) { 
         // TODO: Asserts `to` has a registry  
         // TODO: Asserts token is registered    
         property::transfer_fractional_share(
             owner, 
-            to, 
-            object::address_to_object<FractionalShareToken>(token_address)
+            token_address, 
+            to
             );
         // TODO: Transfer it to the registry
     }
@@ -122,6 +123,10 @@ module propertize_addr::registry{
     //
     // Unit testing
     // 
+    #[test_only]
+    use aptos_framework::object;
+    #[test_only]
+    use propertize_addr::property::{FractionalShareToken};
     #[test_only]
     use aptos_token_objects::collection;
     #[test_only]
@@ -170,7 +175,8 @@ module propertize_addr::registry{
         // Registers the minted fractional share token
         register_token(owner,  token_address);
         // Tranfers the minted fractional share token
-        transfer_registered_token(owner, to, token_address);
+        let to_address = signer::address_of(to);
+        transfer_registered_token(owner, to_address, token_address);
         // Assert `to` is the new owner of the token
         property::assert_owner(to, &token);
     }

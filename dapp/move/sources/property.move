@@ -25,23 +25,23 @@
     - TODO: What is internal collection?
 */
 module propertize_addr::property {
-    // TODO: alphabetical order
-    use std::error;
-    use std::option;
-    use std::string::{Self, String};
-    use std::signer;
-
     use aptos_framework::object::{Self, Object};
     use aptos_token_objects::collection;
     use aptos_token_objects::token;
     use aptos_token_objects::property_map;
 
+    use std::error;
+    use std::option;
+    use std::string::{Self, String};
+    use std::signer;
+
     // To use transfer()
-    friend propertize_addr::marketplace; 
+    friend propertize_addr::marketplace;
 
     //
     // Errors
     //
+
     // The token does not exist
     const ETOKEN_DOES_NOT_EXIST: u64 = 1;
     // The token  exists
@@ -59,13 +59,6 @@ module propertize_addr::property {
     // The collection exists
     const ECOLLECTION_DOES_NOT_EXIST: u64 = 8;
 
-    // TODO: these shouldn't be constants.
-    // The Property token collection name
-    const COLLECTION_NAME: vector<u8> = b"Property";
-    // The Property token collection description
-    const COLLECTION_DESCRIPTION: vector<u8> = b"Property Collection Description";
-    // The Property token collection URI
-    const COLLECTION_URI: vector<u8> = b"Property Collection URI";
     // The Property token Supply, fixed to 100 for now.
     const SUPPLY: u64 = 100; 
 
@@ -77,6 +70,8 @@ module propertize_addr::property {
         burn_ref: token::BurnRef,
         // Ref to modify the state of props of the token
         property_mutator_ref: property_map::MutatorRef,
+        // Token address
+        token_address: address,
     }
 
     struct OwnershipShare has key {
@@ -275,6 +270,9 @@ module propertize_addr::property {
             option::none(),
             uri,
         );
+        // Gets the object address from the constructor_ref
+        let object = object::object_from_constructor_ref<token::Token>(&constructor_ref);
+        let token_address = object::object_address(&object);
 
         // Generates the object signer and the refs. The object signer is used to publish a resource
         // (OwnershipShare) under the token object address. The refs are used to manage the token.
@@ -282,47 +280,64 @@ module propertize_addr::property {
         let burn_ref = token::generate_burn_ref(&constructor_ref);
         let property_mutator_ref = property_map::generate_mutator_ref(&constructor_ref);
 
-        // Initializes the ownership share percentage as 20.
+        // TODO: Initializes the ownership share percentage as 20.
+        
+        // Transfers token to owner
+        let owner_address = signer::address_of(owner);
+        let transfer_ref = object::generate_transfer_ref(&constructor_ref);
+        let linear_transfer_ref = object::generate_linear_transfer_ref(&transfer_ref);
+        object::transfer_with_ref(linear_transfer_ref, owner_address);
+        // TODO ungated transfer must be disabled!
+        //object::disable_ungated_transfer(&transfer_ref);
+        
         // TODO: the ownership share percentage should not be defined when minting the token
         let properties = property_map::prepare_input(vector[], vector[], vector[]);
         property_map::init(&constructor_ref, properties);
         property_map::add_typed(
             &property_mutator_ref,
             string::utf8(b"Ownership Share"),
-            20  // TODO: should be set when intercation with the function
+            20  // TODO: should be set when intercating with the function
         );
 
         // Publishes the FractionalShareToken resource
         let fractional_share_token = FractionalShareToken {
             burn_ref,
             property_mutator_ref,
+            token_address
         };
         move_to(&object_signer, fractional_share_token);
+
+        // Asserts the owner of the token is the owner
+        assert_owner(owner, &object);
     }
 
     // Burn the token, and destroy the FractionalShareToken
     // and OwnershipShare resources, and the property map.
     public entry fun burn(creator: &signer, token: Object<FractionalShareToken>) acquires FractionalShareToken {
-        assert_creator(creator, &token);
         let fractional_share_token = move_from<FractionalShareToken>(object::object_address(&token));
-        
+        assert_creator(creator, &token);
+
         let FractionalShareToken {
             burn_ref,
             property_mutator_ref,
+            token_address: _,
         } = fractional_share_token;
 
         property_map::burn(property_mutator_ref);
         token::burn(burn_ref);
+
         // TODO: should the supply be decremented after burning a token?
     } 
 
     // Transfer the fractional share token to `transfer_to` address.
-    public entry fun transfer_fractional_share(owner: &signer, to: &signer, token: Object<FractionalShareToken>) {
+    public entry fun transfer_fractional_share(owner: &signer, token_address: address, to: address) {
+        let token = object::address_to_object<FractionalShareToken>(token_address);
         // Assert token exists
         assert_token_exists(&token);
         // Assert the owner is the the owner of the token to be transferred 
         assert_owner(owner, &token);
-        object::transfer(owner, token, signer::address_of(to));
+        
+        object::transfer(owner, token, to);
 
     }
 
@@ -336,7 +351,7 @@ module propertize_addr::property {
     */
     public entry fun transfer_property_collection(
         owner: &signer, 
-        to: &signer,
+        to: address,
         collection_name: String,
     ) { 
         let collection_address = collection::create_collection_address(&signer::address_of(owner), &collection_name);
@@ -346,7 +361,8 @@ module propertize_addr::property {
         // TODO: Asserts `owner` is the property owner
         // TODO: Asserts `to` is a valid address
         //object::enable_ungated_transfer
-        object::transfer(owner, collection, signer::address_of(to));
+        
+        object::transfer(owner, collection, to);
         //object::disable_ungated_transfer
     }
 
@@ -389,7 +405,8 @@ module propertize_addr::property {
         // Asserts the owner of the token is the creator
         assert_owner(creator, &token);
         // Transfers the token to user1
-        transfer_fractional_share(creator, user1, token);
+        let user1_address = signer::address_of(user1);
+        transfer_fractional_share(creator, user1_address, token_address);
         // Asserts the new owner of the token is user1
         assert_owner(user1, &token);
         // Asserts the burnt token exists before burning

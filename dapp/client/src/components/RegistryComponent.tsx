@@ -23,9 +23,13 @@ import { Spin } from 'antd';
 type RegisteredToken = {
   token_address: string;
   owner_address: string;
-  timestamp_seconds: number; //TODO: enforce this to be uint64
 };
 
+type TransferredToken = {
+  owner_address: string;
+  token_address: string;
+  to_address: string;
+}
 
 export const RegistryComponent = () => {
   // Component logic and state can be defined here
@@ -38,6 +42,11 @@ export const RegistryComponent = () => {
   const [tokenAdded, setTokenAdded] = useState<boolean>(false);
   const [registeredProperties, setRegisteredProperties] = useState<RegisteredToken[]>([]);
   const [newRegisterToken, setNewRegisterToken] = useState<string>("");
+
+  const [newToAddress, setNewToAddress] = useState<string>("");
+  const [newTokenToTransfer, setNewTokenToTransfer] = useState<string>("");
+
+  const [transferHistory, setTransferHistory] = useState<TransferredToken[]>([]);
   /// spinner
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
 
@@ -45,6 +54,16 @@ export const RegistryComponent = () => {
     const value = event.target.value;
     setNewRegisterToken(value);
   }
+
+  const onTypeTokenToTransfer = (eventTypeTokenToTransfer: React.ChangeEvent<HTMLInputElement>) => {
+    const value = eventTypeTokenToTransfer.target.value;
+    setNewTokenToTransfer(value);
+  };
+
+  const onTypeToAddress = (eventTypeToAddress: React.ChangeEvent<HTMLInputElement>) => {
+    const value = eventTypeToAddress.target.value;
+    setNewToAddress(value);
+  };
 
   const fetchRegistry = async () => {
     if (!account) return [];
@@ -139,7 +158,6 @@ export const RegistryComponent = () => {
     const newRegisterTokenToPush = {
       token_address: newRegisterToken,
       owner_address: account.address,
-      timestamp_seconds: 0, // TODO: get timestamp
     };
 
     try {
@@ -165,7 +183,54 @@ export const RegistryComponent = () => {
       setTransactionInProgress(false);
     }
   }
+    /// Transfer Token
+  const transferToken = async () => {
+    // check for connected account
+    if (!account) return;
+    setTransactionInProgress(true);
 
+    // tx payload to be submited
+    const payload = {
+      type: "entry_function_payload",
+      function: `${MODULE_ADDRESS}::registry::transfer_registered_token`,
+      type_arguments: [],
+      arguments: [
+        newTokenToTransfer,
+        newToAddress
+      ],
+    }
+    // object to be stored into local state
+    const newTransferTokenToPush = {
+      owner_address: account.address,
+      token_address: newTokenToTransfer,
+      to_address: newToAddress,
+    };
+
+    try {
+      // sign and submit transaction to chain
+      const response = await signAndSubmitTransaction(payload);
+      // wait for transaction
+      await PROVIDER.waitForTransaction(response.hash);
+
+      // create new array based on current state
+      let newTransferHistory = [...transferHistory];
+
+      // add item to the array
+      newTransferHistory.push(newTransferTokenToPush);
+
+      // set state
+      setTransferHistory(newTransferHistory);
+
+      // clear input
+      setNewTokenToTransfer("");
+      setNewToAddress("");
+    } catch (error: any) {
+      console.log("error", error);
+    } finally {
+      setTransactionInProgress(false);
+    }
+  }
+  
   //
   // Render
   //
@@ -179,7 +244,7 @@ export const RegistryComponent = () => {
           <Button
           onClick={addNewRegistry}
           variant='outline'
-          _hover={{ backgroundColor: "teal" }}
+          _hover={{ backgroundColor: "blue" }}
         >
           Create Registry
         </Button>
@@ -190,23 +255,51 @@ export const RegistryComponent = () => {
               spacing={"10"}
               align={"Center"}
             >
-              {/*TODO: add a popover, like in the fractional share list*/}
+              <Spin spinning={transactionInProgress}>
+                {/*TRANSFER TOKEN BUTTON*/}
+                <Stack>
+                  <Text>Transfer your token</Text>
+                  {/*TOKEN ADDRESS*/}
+                  <Input
+                  pr='4.5rem'
+                  onChange={(eventTypeTokenToTransfer) => onTypeTokenToTransfer(eventTypeTokenToTransfer)}
+                  placeholder='Token address'
+                  value={newTokenToTransfer}
+                  //type={}
+                  /> 
+
+                  {/*RECIPIENT ADDRESS*/}
+                  <Input
+                  pr='4.5rem'
+                  onChange={(eventTypeToAddress) => onTypeToAddress(eventTypeToAddress)}
+                  placeholder='Recipient'
+                  value={newToAddress}
+                  //type={}
+                  /> 
+
+                  {/* SEND TOKEN*/}          
+                  <Button
+                  fontSize={"xx-small"}
+                  onClick={transferToken}
+                  >
+                  Send
+                  </Button>
+                </Stack>
+              </Spin>
+              
+              {/*TRANSFER HISTORY*/}
               <List>
                 <Heading size='xs'>
-                  Registry list 
+                  Transfers History
                 </Heading>
-                {
-                  registeredProperties.map((registeredToken) => (
-                    <ListItem 
-                    key={registeredToken.owner_address}
-                    title={registeredToken.token_address}
-                    >
+                {transferHistory.map((newTransferTokenToPush) => (
+                    <ListItem>
                       <HStack>
                         <Text>
-                          {registeredToken.token_address}
+                          {newTransferTokenToPush.token_address}
                         </Text>
-                        <Link 
-                        href={`https://explorer.aptoslabs.com/account/${registeredToken.token_address}/`}
+                        <Link
+                        href={`https://explorer.aptoslabs.com/account/${newTransferTokenToPush.owner_address}/`}
                         isExternal
                         >
                           view on Explorer
@@ -215,7 +308,7 @@ export const RegistryComponent = () => {
                     </ListItem>
                   ))
                 }
-              </List>
+              </List> 
               <Box>
                 {/*TODO: make this a popover*/}
                 <Text>Register your Fractional Share:</Text>
@@ -238,6 +331,32 @@ export const RegistryComponent = () => {
                   </InputRightElement>
                 </InputGroup>
               </Box>
+              {/*TODO: add a popover, like in the fractional share list*/}
+              <List>
+                <Heading size='xs'>
+                  Registry listing
+                </Heading>
+                {
+                  registeredProperties.map((registeredToken) => (
+                    <ListItem 
+                    key={registeredToken.owner_address}
+                    title={registeredToken.token_address}
+                    >
+                      <HStack>
+                        <Text>
+                          {registeredToken.token_address}
+                        </Text>
+                        <Link 
+                        href={`https://explorer.aptoslabs.com/account/${registeredToken.owner_address}/`}
+                        isExternal
+                        >
+                          view on Explorer
+                        </Link>
+                      </HStack>
+                    </ListItem>
+                  ))
+                }
+              </List>
             </VStack>
           )
         )

@@ -25,9 +25,10 @@ import {
   PopoverBody,
   Center,
 } from '@chakra-ui/react';
-import { MODULE_ADDRESS, PROVIDER } from '../constants';
+import { MODULE_ADDRESS, PROVIDER, client, faucetClient, tokenClient } from '../constants';
 
 type Property = {
+  owner_address: string;
   name: string;
   description: String;
   uri: string;
@@ -49,9 +50,6 @@ export const PropertyComponent = () => {
   const [newPropertyName, setNewPropertyName] = useState<string>("");
   const [newPropertyDescription, setNewPropertyDescription] = useState<string>("");
   const [newPropertyUri, setNewPropertyUri] = useState<string>("");
-
-  //const [newGetTokenAddress, setNewGetTokenAddress] = useState<string>("");
-  const [newCreatedProperty, setNewCreatedProperty] = useState<string>("");
   
   /// spinner
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -97,6 +95,7 @@ export const PropertyComponent = () => {
 
   // build new property to push into local state
   const newPropertyToPush = {
+    owner_address: account.address,
     description: newPropertyDescription,
     name: newPropertyName,
     uri: newPropertyUri
@@ -130,6 +129,11 @@ export const PropertyComponent = () => {
 
   /// TODO: Get Property address
 
+  const getMetadata = async () => {
+    const collectionData = await tokenClient.getCollectionData(MODULE_ADDRESS, newPropertyName);
+    console.log(`Alice's collection: ${JSON.stringify(collectionData, null, 4)}`);
+  }
+
   //
   // Render
   //
@@ -138,17 +142,6 @@ export const PropertyComponent = () => {
     <Spin spinning={transactionInProgress}>
       <Center>
         {
-          !accountHasProperty ? (
-            <ButtonGroup>
-              <Button
-              onClick={onPropertyCreated} // TODO: make this hsow the form instead of executing a module function
-              variant='outline'
-              _hover={{ backgroundColor: "teal" }}
-            >
-              Create Property
-            </Button>
-            </ButtonGroup>
-          ) : (
             createdProperties && (
               <VStack 
               spacing={"10"}
@@ -170,7 +163,7 @@ export const PropertyComponent = () => {
                           {newProperties.name}
                         </Text>
                         <Link 
-                        href={`https://explorer.aptoslabs.com/account/`}
+                        href={`https://explorer.aptoslabs.com/account/${newProperties.owner_address}/`}
                         isExternal
                         >
                           view on Explorer
@@ -221,7 +214,6 @@ export const PropertyComponent = () => {
               </Box>
             </VStack>
             )
-          )
         }
       </Center>
     </Spin>
