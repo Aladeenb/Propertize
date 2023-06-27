@@ -52,20 +52,3 @@ to mint/burn tokens. Not the creator.
 - `mint`/`burn` Fractional Share tokens must not be **"direct"**. 
 It won't be convinient for the owners of Fractional Share to have their tokens burnt without their consent. A protection layer have to be implemented.
 > DAO implementation is one solution for that.
-
-##### Questions
-- What is internal collection? and how to make use of it?
-
------------------------------------------------------------------
-
-## Overview
-### Modules
-- `Property` module is based on object token model. (used [ambassador](https://github.com/aptos-labs/aptos-core/tree/main/aptos-move/move-examples/token_objects/ambassador) as a reference). Only one object can be set for now, `living area`.
-- `Registry` module is a list containing the token address as well as the owner's. You can think of it as a layer to get the property "approved" by certain entities, whether it's a government or anything else. 
-- The `Marketplace` module will contain the functionalities for swapping ownership for coins. The marketplace will feature only buying and selling for now, auctions and leasing will come next.
-
-### mint and sell scenario: 
-1. The user will "mint" the token.
-2. Once minted, the user will have to manually store it in the registry (this step should be automatic).
-3. Once the token is in the registry, the user can decide whether to list it for sale or not. If so, the token will be added to the marketplace.
-4. The token is sold, its ownership will be transferred to the buyer (swap coins for token).
