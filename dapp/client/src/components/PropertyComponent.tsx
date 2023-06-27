@@ -24,8 +24,17 @@ import {
   PopoverCloseButton,
   PopoverBody,
   Center,
+  Flex,
+  Grid,
+  useColorModeValue,
+  FormControl,
+  FormErrorMessage,
+  FormLabel
 } from '@chakra-ui/react';
-import { MODULE_ADDRESS, PROVIDER, client, faucetClient, tokenClient } from '../constants';
+import { MODULE_ADDRESS, PROVIDER } from '../constants';
+import { CardItem, CardListProperty } from "./Card/CardListProperty";
+import { useForm } from "react-hook-form";
+
 
 type Property = {
   owner_address: string;
@@ -38,6 +47,7 @@ type Property = {
 export const PropertyComponent = () => {
   // Component logic and state can be defined here
   const { account, signAndSubmitTransaction } = useWallet();
+  const { handleSubmit, register, formState: { errors } } = useForm();
 
   //
   // State
@@ -51,6 +61,9 @@ export const PropertyComponent = () => {
   const [newPropertyDescription, setNewPropertyDescription] = useState<string>("");
   const [newPropertyUri, setNewPropertyUri] = useState<string>("");
   
+  // Card Item
+  const [properties, setProperties] = useState<CardItem[]>([]);
+
   /// spinner
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
 
@@ -70,9 +83,7 @@ export const PropertyComponent = () => {
     setNewPropertyUri(valueUri)
   };
 
-  //
-  // Functions
-  //
+  const borderBgColor = useColorModeValue('red', 'blue');
 
   // creates a property
   const onPropertyCreated = async () => {
@@ -94,12 +105,12 @@ export const PropertyComponent = () => {
   };
 
   // build new property to push into local state
-  const newPropertyToPush = {
-    owner_address: account.address,
-    description: newPropertyDescription,
+  const newProperty: CardItem = {
+    ownerAddress: account.address,
     name: newPropertyName,
-    uri: newPropertyUri
-  };
+    description: newPropertyDescription,
+    uri: newPropertyUri,
+  }
 
   try {
     // sign and submit tx to chain
@@ -107,14 +118,9 @@ export const PropertyComponent = () => {
     // wait for transaction
     await PROVIDER.waitForTransaction(response.hash);
     setAccountHasProperty(true);
-    // create an array based on the current state
-    let newProperties = [...createdProperties];
 
-    // add the new property to the array
-    newProperties.push(newPropertyToPush);
-
-    // set state
-    setCreatedProperties(newProperties);
+    // set state and add the new property to the array
+    setProperties((prevProperties) => [...prevProperties, newProperty]);
 
     // clear inputs
     setNewPropertyDescription("");
@@ -129,53 +135,32 @@ export const PropertyComponent = () => {
 
   /// TODO: Get Property address
 
-  const getMetadata = async () => {
-    const collectionData = await tokenClient.getCollectionData(MODULE_ADDRESS, newPropertyName);
-    console.log(`Alice's collection: ${JSON.stringify(collectionData, null, 4)}`);
-  }
-
   //
   // Render
   //
   return (
     // TSX markup defines the component's UI
     <Spin spinning={transactionInProgress}>
-      <Center>
+      <div
+        >
         {
             createdProperties && (
-              <VStack 
-              spacing={"10"}
-              align={"Center"}
-            >
-              {/*TODO: add a popover, like in the fractional share list*/}
-              <List>
-                <Heading size='xs'>
-                  Property list 
-                </Heading>
-                {
-                  createdProperties.map((newProperties) => (
-                    <ListItem 
-                    key={newProperties.name}
-                    // title={newProperties.description}
-                    >
-                      <HStack>
-                        <Text>
-                          {newProperties.name}
-                        </Text>
-                        <Link 
-                        href={`https://explorer.aptoslabs.com/account/${newProperties.owner_address}/`}
-                        isExternal
-                        >
-                          view on Explorer
-                        </Link>
-                      </HStack>
-                    </ListItem>
-                  ))
-                }
-              </List>
-              <Box>
-                {/*TODO: make a property list*/}
-                <Stack spacing={2}>
+              <Stack  
+                w={"95vw"} 
+                p={0}
+                align={"center"}
+              >  
+                        
+              <Center
+                w={"40vw"} 
+                h={"30vw"}
+                bgColor={{borderBgColor}} 
+                overflow={"auto"}
+                borderRadius={10}
+                borderWidth={2}
+                borderColor={"#3f67ff"}
+              >
+                <Stack>
                   {/*TODO: make this a popover*/}
                   {/*NAME*/}
                   
@@ -184,6 +169,7 @@ export const PropertyComponent = () => {
                       onChange={(eventName) => onCreatePropertyName(eventName)}
                       placeholder='name'
                       value={newPropertyName}
+                      focusBorderColor="#3f67ff"
                       //type={}
                     />                 
 
@@ -193,6 +179,7 @@ export const PropertyComponent = () => {
                       onChange={(eventDescription) => onCreatePropertyDescription(eventDescription)}
                       placeholder='description'
                       value={newPropertyDescription}
+                      focusBorderColor="#3f67ff"
                       //type={}
                     />          
 
@@ -202,20 +189,43 @@ export const PropertyComponent = () => {
                       onChange={(eventUri) => onCreatePropertyUri(eventUri)}
                       placeholder='uri'
                       value={newPropertyUri}
+                      focusBorderColor="#3f67ff"
                       //type={}
                     />          
                     <Button
                       fontSize={"xx-small"}
                       onClick={onPropertyCreated}
+                      bgColor={"blackAlpha.400"}
                     >
                       Create
                     </Button>
                 </Stack>
-              </Box>
-            </VStack>
+              </Center>
+                 
+                           
+              {/*PROPERTY CARDLIST*/}
+              <Center paddingTop={6} >
+                <VStack spacing={0}>
+                  <Heading size='md' textAlign={"center"}>
+                    My Properties 
+                  </Heading>
+                  <Box 
+                  w={"40vw"} 
+                  h={"55vw"}
+                  
+                  overflow={"auto"}
+
+                  transform={`scale(0.8)`}
+                  >
+                    <CardListProperty items={properties} /> 
+                  </Box>  
+                </VStack>   
+              </Center>                     
+          </Stack>
             )
+            
         }
-      </Center>
+      </div>
     </Spin>
   );
 };

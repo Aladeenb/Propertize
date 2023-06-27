@@ -15,7 +15,8 @@ import {
   Text,
   HStack,
   VStack,
-  Heading
+  Heading,
+  Flex
 } from '@chakra-ui/react';
 import { MODULE_ADDRESS, PROVIDER } from '../constants';
 import { Spin } from 'antd';
@@ -238,7 +239,7 @@ export const RegistryComponent = () => {
   return (
     // TSX markup defines the component's UI
     <Spin spinning={transactionInProgress}>
-      <Stack>
+      <Flex>
       {!accountHasRegistry ? (
         <ButtonGroup>
           <Button
@@ -256,8 +257,60 @@ export const RegistryComponent = () => {
               align={"Center"}
             >
               <Spin spinning={transactionInProgress}>
-                {/*TRANSFER TOKEN BUTTON*/}
-                <Stack>
+              <Box p={4}>
+                {/* REGISTRY */}
+                {/*TODO: make this a popover*/}
+                <Text>Register your Fractional Share:</Text>
+
+                <InputGroup size='md'>
+                  <Input
+                    pr='4.5rem'
+                    onChange={(event) => onRegisterToken(event)}
+                    placeholder='Enter token address'
+                    value={newRegisterToken}
+                    //type={}
+                  />
+                  <InputRightElement width='4.5rem'>
+                    <Button
+                      h='1.75rem' 
+                      size='sm'
+                      onClick={onTokenRegistered}
+                    >
+                      Register
+                    </Button>
+                  </InputRightElement>
+                </InputGroup>
+              </Box>
+
+              {/* REGISTRY LISTING */}
+              {/*TODO: add a popover, like in the fractional share list*/}
+              <List p={4}>
+                <Heading size='xs'>
+                  Registry listing
+                </Heading>
+                {
+                  registeredProperties.map((registeredToken) => (
+                    <ListItem 
+                    key={registeredToken.owner_address}
+                    title={registeredToken.token_address}
+                    >
+                      <HStack>
+                        <Text>
+                          {registeredToken.token_address}
+                        </Text>
+                        <Link 
+                        href={`https://explorer.aptoslabs.com/account/${registeredToken.owner_address}/`}
+                        isExternal
+                        >
+                          view on Explorer
+                        </Link>
+                      </HStack>
+                    </ListItem>
+                  ))
+                }
+              </List>
+              {/*TRANSFER TOKEN BUTTON*/}
+              <Stack p={4}>
                   <Text>Transfer your token</Text>
                   {/*TOKEN ADDRESS*/}
                   <Input
@@ -288,80 +341,39 @@ export const RegistryComponent = () => {
               </Spin>
               
               {/*TRANSFER HISTORY*/}
-              <List>
-                <Heading size='xs'>
+              <Heading size='xs'>
                   Transfers History
                 </Heading>
+              <List
+              borderColor={"#3f67ff"}
+              borderWidth={2}
+              borderRadius={4}
+              >
                 {transferHistory.map((newTransferTokenToPush) => (
                     <ListItem>
-                      <HStack>
-                        <Text>
-                          {newTransferTokenToPush.token_address}
-                        </Text>
-                        <Link
-                        href={`https://explorer.aptoslabs.com/account/${newTransferTokenToPush.owner_address}/`}
-                        isExternal
-                        >
-                          view on Explorer
-                        </Link>
-                      </HStack>
+                      <Box
+                      >
+                        <HStack>
+                          <Text>
+                            {newTransferTokenToPush.token_address}
+                          </Text>
+                          <Link
+                          href={`https://explorer.aptoslabs.com/account/${newTransferTokenToPush.owner_address}/`}
+                          isExternal
+                          >
+                            view on Explorer
+                          </Link>
+                        </HStack>
+                      </Box>
                     </ListItem>
                   ))
                 }
               </List> 
-              <Box>
-                {/*TODO: make this a popover*/}
-                <Text>Register your Fractional Share:</Text>
-                <InputGroup size='md'>
-                  <Input
-                    pr='4.5rem'
-                    onChange={(event) => onRegisterToken(event)}
-                    placeholder='Enter token address'
-                    value={newRegisterToken}
-                    //type={}
-                  />
-                  <InputRightElement width='4.5rem'>
-                    <Button
-                      h='1.75rem' 
-                      size='sm'
-                      onClick={onTokenRegistered}
-                    >
-                      Register
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-              </Box>
-              {/*TODO: add a popover, like in the fractional share list*/}
-              <List>
-                <Heading size='xs'>
-                  Registry listing
-                </Heading>
-                {
-                  registeredProperties.map((registeredToken) => (
-                    <ListItem 
-                    key={registeredToken.owner_address}
-                    title={registeredToken.token_address}
-                    >
-                      <HStack>
-                        <Text>
-                          {registeredToken.token_address}
-                        </Text>
-                        <Link 
-                        href={`https://explorer.aptoslabs.com/account/${registeredToken.owner_address}/`}
-                        isExternal
-                        >
-                          view on Explorer
-                        </Link>
-                      </HStack>
-                    </ListItem>
-                  ))
-                }
-              </List>
             </VStack>
           )
         )
       }
-      </Stack>
+      </Flex>
     </Spin>
     
     

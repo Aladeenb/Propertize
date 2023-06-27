@@ -1,13 +1,12 @@
 /*
     - Property is a collection of fractionalShare tokens 
     - FractionalShare tokens represent fractional shares of the property.
-    - Property collection is created upon module publishing and initialization.
     - Only the collection owner can mint/burn fractionalShare tokens.
     - FractionalShare tokens are transferable.
     - FractionalShare tokens have custom attribute called OwnershipShare.
     - OwnershipShare represents the percentage of Property ownership 
     belongs to the FractionalShare.
-    - TODO: the owner of the collection is the one who should be able 
+    - the owner of the collection is the one who should be able 
     to mint/burn tokens. Not the creator. 
 
     - TODO: other FractionalShare attributes to consider:
@@ -22,7 +21,6 @@
     DAO implementation is one solution for that.
     - TODO: Ownership share is mutable and can be modified even after minting
     the fractional share token. I'm still exploring ways for a good implementation.
-    - TODO: What is internal collection?
 */
 module propertize_addr::property {
     use aptos_framework::object::{Self, Object};

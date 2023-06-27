@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Spin } from 'antd';
 import { 
   Box,
+  Center,
   Stack, 
   Button, 
   Input,
@@ -21,19 +22,15 @@ import {
   PopoverArrow,
   PopoverCloseButton,
   PopoverBody,
+  Flex,
+  VStack
 } from '@chakra-ui/react';
 import { MODULE_ADDRESS, PROVIDER } from '../constants';
+import { CardItem, CardListFractionalShare } from "./Card/CardListFractionalShare";
 
 export const FractionalShareComponent = () => {
   // Component logic and state can be defined here
-  const { account, signAndSubmitTransaction } = useWallet();
-
-  type Token = {
-    property: string;
-    name: string;
-    description: string;
-    uri: string;
-  } 
+  const { account, signAndSubmitTransaction } = useWallet(); 
 
   type TokenWithAddress = {
     property: string;
@@ -60,6 +57,9 @@ export const FractionalShareComponent = () => {
 
   //const [newGetTokenAddress, setNewGetTokenAddress] = useState<string>("");
   const [newCreatedToken, setNewCreatedToken] = useState<string>("");
+
+  // Card Item
+  const [fractionalShares, setFractionalShares] = useState<CardItem[]>([]);
   
   /// spinner
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
@@ -115,14 +115,14 @@ export const FractionalShareComponent = () => {
       ],
     }
 
-    // object to be stored into local state
-    const newTokenWithAddressToPush = {
-      property: newCollectionName,
-      description: newTokenDescription,
+    // build new fractional share to push into local state
+    const newFractionalShare: CardItem = {
+      ownerAddress: account.address,
+      propertyName: newCollectionName,
       name: newTokenName,
+      description: newTokenDescription,
       uri: newTokenUri,
-      address: account.address,
-    };
+    }
 
     try {
       // sign and submit transaction to chain
@@ -130,18 +130,14 @@ export const FractionalShareComponent = () => {
       // wait for transaction
       await PROVIDER.waitForTransaction(response.hash);
 
-      // create new array based on current state
-      let newCreatedTokens = [...createdTokens];
-
-      // add item to the array
-      newCreatedTokens.push(newTokenWithAddressToPush);
-
-      // set state
-      setCreatedTokens(newCreatedTokens);
+      // set state and add the new fractional share to the array
+      setFractionalShares((prevFractionalShares) => [...prevFractionalShares, newFractionalShare]);
 
       // clear input
-      setNewCreatedToken("");
-      setaccountHasToken(true);
+      setNewCollectionName("");
+      setNewTokenName("");
+      setNewTokenDescription("");
+      setNewTokenUri("");
     } catch (error: any) {
       console.log("error", error);
     } finally {
@@ -178,15 +174,6 @@ export const FractionalShareComponent = () => {
       };
       const response = await PROVIDER.view(payload);
       return response[0] as any;
-  
-      // object to be stored into local state
-      const newTokenWithAddressToPush = {
-        property: newCollectionName,
-        description: newTokenDescription,
-        name: newTokenName,
-        uri: newTokenUri,
-        address: response,
-      };
     }
   
 
@@ -197,58 +184,90 @@ export const FractionalShareComponent = () => {
     // TSX markup defines the component's UI
     <Spin spinning={transactionInProgress}>
       {/*Fractional Share Token*/}
-      <Stack>
-        {/*TODO: make this a popover*/}
-        <Text>Create Fractional Share Token:</Text>
-
-        {/*COLLECTION NAME*/}
-        {/*TODO: Make this a list to choose from */}
-        <Input
-        pr='4.5rem'
-        onChange={(eventCollectionName) => onCreateCollectionName(eventCollectionName)}
-        placeholder='Property'
-        value={newCollectionName}
-        //type={}
-        /> 
-
-    {/*TOKEN NAME*/}
-        <Input
-        pr='4.5rem'
-        onChange={(eventCollectionName) => onCreateTokenName(eventCollectionName)}
-        placeholder='token name'
-        value={newTokenName}
-        //type={}
-        />
-
-        {/*TOKEN DESCRIPTION*/}
-        <Input
-        pr='4.5rem'
-        onChange={(eventTokenDescription) => onCreateTokenDescription(eventTokenDescription)}
-        placeholder='description'
-        value={newTokenDescription}
-        //type={}
-        />          
-
-        {/*URI*/}
-        <Input
-        pr='4.5rem'
-        onChange={(eventTokenUri) => onCreateTokenUri(eventTokenUri)}
-        placeholder='uri'
-        value={newTokenUri}
-        //type={}
-        />
-
-        {/* SUBMIT TOKEN*/}          
-        <Button
-        fontSize={"xx-small"}
-        onClick={onTokenCreated}
+      <Stack
+        w={"95vw"} 
+        p={0}
+        align={"center"}
+      >
+        <Center
+          w={"42vw"} 
+          h={"36vw"}
+          overflow={"auto"}
+          borderRadius={10}
+          borderWidth={2}
+          borderColor={"#3f67ff"}
         >
-        Create
-        </Button>
-      </Stack>
+          <Stack>
+            {/*COLLECTION NAME*/}
+            {/*TODO: Make this a list to choose from */}
+            <Input
+            pr='4.5rem'
+            onChange={(eventCollectionName) => onCreateCollectionName(eventCollectionName)}
+            placeholder='Property'
+            value={newCollectionName}
+            //type={}
+            /> 
 
+            {/*TOKEN NAME*/}
+            <Input
+            pr='4.5rem'
+            onChange={(eventCollectionName) => onCreateTokenName(eventCollectionName)}
+            placeholder='token name'
+            value={newTokenName}
+            //type={}
+            />
+
+            {/*TOKEN DESCRIPTION*/}
+            <Input
+            pr='4.5rem'
+            onChange={(eventTokenDescription) => onCreateTokenDescription(eventTokenDescription)}
+            placeholder='description'
+            value={newTokenDescription}
+            //type={}
+            />          
+
+            {/*URI*/}
+            <Input
+            pr='4.5rem'
+            onChange={(eventTokenUri) => onCreateTokenUri(eventTokenUri)}
+            placeholder='uri'
+            value={newTokenUri}
+            //type={}
+            />
+
+            {/* SUBMIT TOKEN*/}          
+            <Button
+            fontSize={"xx-small"}
+            bgColor={"blackAlpha.400"}
+            onClick={onTokenCreated}
+            >
+            Create
+            </Button>
+          </Stack>
+        </Center>
+
+        {/*FRACTIONAL SHARE CARDLIST*/}
+        <Center paddingTop={6} >
+          <VStack spacing={0}>
+            <Heading size='md' textAlign={"center"}>
+              My Properties 
+            </Heading>
+            <Box 
+            w={"40vw"} 
+            h={"55vw"}
+            
+            overflow={"auto"}
+
+            transform={`scale(0.8)`}
+            >
+              <CardListFractionalShare items={fractionalShares} /> 
+            </Box>  
+          </VStack>   
+        </Center>
+      </Stack>
+      
       {accountHasToken && (
-        <Box flex={8} mx="auto">
+        <Flex flex={8} mx="auto" bgColor={"green"}>
             <Popover>
               <PopoverTrigger>
                 <Box>
@@ -288,7 +307,7 @@ export const FractionalShareComponent = () => {
                 </PopoverBody>
             </PopoverContent>
             </Popover>
-        </Box>
+        </Flex>
         
       )}
     </Spin>

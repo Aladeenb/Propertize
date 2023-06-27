@@ -3,8 +3,8 @@
     (fractionalShares), they will have to be registered. The `registry` module
     is a layer dedicated to regulations where all the necessary steps to tokenize 
     the shares is being defined/set. For the time being, we assume there are no
-    constraints for registering and we only interested in interacting with it.
-    - TODO: register objects?  
+    constraints for registering and we only interested in interacting with it. 
+    - TODO: add checkRegistered() to check whether the inputed address is registered 
 */
 module propertize_addr::registry{
     // TODO: alphabetical order
