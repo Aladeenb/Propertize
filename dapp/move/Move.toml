@@ -1,0 +1,16 @@
+[package]
+name = 'propertize'
+version = '0.0.0'
+
+[addresses]
+propertize_addr = '0x438f261f7d74f1b04d3558165b0c91df8caa623f5adb8e3dc6427f8c145fbbbb'
+
+[dependencies.AptosFramework]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-framework'
+
+[dependencies.AptosTokenObjects]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-token-objects'
